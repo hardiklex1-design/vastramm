@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VASTRAMM BY MY3 — Digital Atelier</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root{--black:#050505;--white:#f4f3ef;--gray:#8b8b87;--line:#252525;--panel:#0b0b0b}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--black);color:var(--white);font-family:Manrope,Arial,sans-serif;cursor:none;overflow-x:hidden}
+::selection{background:#fff;color:#000}.cursor{position:fixed;z-index:999;width:10px;height:10px;border:1px solid #fff;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:.25s}.cursor.on{width:70px;height:70px;background:#fff}
+.loader{position:fixed;inset:0;background:#050505;z-index:1000;display:grid;place-items:center;animation:exit 1s 1.7s forwards}.loader-inner{text-align:center}.loader-name{font-size:clamp(25px,6vw,70px);font-weight:800;letter-spacing:-.07em}.loader-sub{font:10px 'DM Mono';letter-spacing:4px;color:#777;margin-top:12px}@keyframes exit{to{opacity:0;visibility:hidden}}
+.top{position:fixed;top:0;left:0;right:0;height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 4vw;background:rgba(5,5,5,.7);backdrop-filter:blur(20px);z-index:100}
+.brand{font-size:14px;font-weight:800;letter-spacing:-.04em}.brand span{font:9px 'DM Mono';letter-spacing:2px;color:#777;margin-left:8px}.nav{display:flex;gap:30px;font:9px 'DM Mono';letter-spacing:2px;text-transform:uppercase}.nav a{color:#999}.nav a:hover{color:#fff}.menu{display:none;font:9px 'DM Mono'}
+.hero{height:100vh;min-height:700px;position:relative;display:grid;place-items:center;overflow:hidden;padding-top:72px}.gridlines{position:absolute;inset:0;background:linear-gradient(90deg,transparent 24.9%,#111 25%,transparent 25.1%,transparent 49.9%,#111 50%,transparent 50.1%,transparent 74.9%,#111 75%,transparent 75.1%),linear-gradient(0deg,transparent 24.9%,#111 25%,transparent 25.1%,transparent 49.9%,#111 50%,transparent 50.1%,transparent 74.9%,#111 75%,transparent 75.1%);opacity:.32}
+.ring{position:absolute;width:min(72vw,720px);aspect-ratio:1;border:1px solid #292929;border-radius:50%;animation:rotate 28s linear infinite}.ring:before,.ring:after{content:"";position:absolute;inset:9%;border:1px solid #181818;border-radius:50%}.ring:after{inset:29%;border-color:#333}@keyframes rotate{to{transform:rotate(360deg)}}
+.hero-content{z-index:2;text-align:center}.mono{font:9px 'DM Mono';letter-spacing:4px;color:#777;text-transform:uppercase}.hero h1{font-size:clamp(70px,15vw,205px);line-height:.78;letter-spacing:-.11em;margin:25px 0 30px;font-weight:800}.hero h1 i{font-style:normal;color:transparent;-webkit-text-stroke:1px #eee}.hero p{max-width:520px;margin:auto;color:#888;font-size:12px;line-height:1.8}.enter{display:inline-flex;margin-top:30px;border:1px solid #555;padding:14px 24px;font:9px 'DM Mono';letter-spacing:3px;transition:.35s}.enter:hover{background:#fff;color:#000}
+.corner{position:absolute;font:8px 'DM Mono';letter-spacing:2px;color:#666}.tl{top:110px;left:4vw}.br{right:4vw;bottom:30px;text-align:right}.scroll{position:absolute;bottom:30px;left:4vw;color:#777;font:8px 'DM Mono';letter-spacing:3px}
+section{border-top:1px solid var(--line);padding:120px 4vw}.section-label{font:9px 'DM Mono';letter-spacing:4px;color:#666;text-transform:uppercase}.title{font-size:clamp(45px,8vw,110px);line-height:.86;letter-spacing:-.08em;margin:15px 0 55px;font-weight:800}.title span{color:#555}
+.collection{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.card{height:600px;background:#090909;border:1px solid #191919;position:relative;overflow:hidden;transition:.5s}.card:hover{border-color:#555;transform:translateY(-7px)}.card-bg{position:absolute;inset:0;background:radial-gradient(circle at 50% 38%,#555,#151515 24%,#070707 65%);display:grid;place-items:center}.coat{width:47%;height:65%;background:linear-gradient(100deg,#090909,#eee 44%,#555 48%,#090909 57%);clip-path:polygon(27% 0,73% 0,81% 14%,100% 23%,83% 40%,78% 100%,22% 100%,17% 40%,0 23%,19% 14%);filter:drop-shadow(0 30px 25px #000);transition:.7s}.card:nth-child(2) .coat{height:58%;width:51%;transform:rotate(4deg);background:linear-gradient(100deg,#eee,#222 40%,#070707 68%)}.card:nth-child(3) .coat{height:70%;width:40%;transform:rotate(-4deg);background:linear-gradient(100deg,#050505 30%,#aaa 48%,#101010 62%)}.card:hover .coat{transform:scale(1.09) rotate(0)}.info{position:absolute;left:0;right:0;bottom:0;padding:24px;background:linear-gradient(transparent,#050505 55%)}.info b{font-size:14px}.price{float:right;font:11px 'DM Mono'}.info small{display:block;margin-top:8px;color:#777;font:8px 'DM Mono';letter-spacing:2px}
+.story{display:grid;grid-template-columns:1fr 1fr;min-height:700px}.story-copy{display:flex;flex-direction:column;justify-content:center;padding-right:10vw}.story-copy h2{font-size:clamp(45px,7vw,100px);line-height:.88;letter-spacing:-.08em;margin:20px 0}.story-copy p{max-width:430px;color:#888;font-size:12px;line-height:2}.manifest{position:relative;border-left:1px solid #222;display:grid;place-items:center;overflow:hidden}.manifest:before{content:"";width:55%;aspect-ratio:1;border:1px solid #333;border-radius:50%;box-shadow:0 0 0 50px #101010,0 0 0 51px #222}.manifest-word{position:absolute;font-size:16vw;font-weight:800;letter-spacing:-.12em;color:#111;transform:rotate(-90deg)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #222}.stat{padding:30px;border-right:1px solid #222;min-height:180px}.stat:last-child{border:0}.stat label{display:block;color:#666;font:8px 'DM Mono';letter-spacing:2px}.stat strong{display:block;font-size:45px;letter-spacing:-.07em;margin:35px 0 5px}.stat small{color:#777;font:8px 'DM Mono'}
+.dashboard{margin-top:12px;border:1px solid #222}.dash-head,.dash-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:18px 24px;border-bottom:1px solid #1d1d1d;align-items:center}.dash-head{font:8px 'DM Mono';letter-spacing:3px;color:#666}.dash-row{font-size:11px}.dash-row span:nth-child(2){font:13px 'DM Mono'}.status{font:8px 'DM Mono';letter-spacing:1px;color:#aaa}.bar{height:2px;background:#222}.bar i{display:block;height:100%;background:#fff}.dash-row:last-child{border-bottom:0}
+.experience{display:grid;grid-template-columns:1fr 1fr;gap:10px}.experience-box{height:550px;border:1px solid #222;position:relative;overflow:hidden;background:#080808}.experience-box:first-child{background:radial-gradient(circle at 50% 50%,#777,#151515 25%,#050505 65%)}.experience-box:first-child:after{content:"V";position:absolute;font-size:55vw;line-height:.7;color:#111;font-weight:800;right:-5%;bottom:-5%}.exp-copy{position:absolute;z-index:2;left:28px;bottom:28px}.exp-copy b{font-size:27px;letter-spacing:-1px}.exp-copy small{display:block;font:8px 'DM Mono';letter-spacing:2px;color:#888;margin-bottom:8px}.experience-box:last-child{padding:30px;display:flex;flex-direction:column;justify-content:space-between}.coordinates{font:9px 'DM Mono';line-height:2;color:#666}.quote{font-size:30px;line-height:1;letter-spacing:-.05em}.line{height:1px;background:#222}
+footer{padding:80px 4vw 30px;border-top:1px solid #222;display:flex;justify-content:space-between;align-items:end}.footer-brand{font-size:clamp(40px,8vw,110px);font-weight:800;letter-spacing:-.09em}.footer-right{font:8px 'DM Mono';color:#666;line-height:2.2;text-align:right}
+.reveal{opacity:0;transform:translateY(35px);transition:.9s}.reveal.show{opacity:1;transform:none}
+@media(max-width:800px){.nav{display:none}.menu{display:block}.collection,.story,.experience{grid-template-columns:1fr}.card{height:480px}.story-copy{padding:70px 0}.manifest{min-height:450px}.stats{grid-template-columns:1fr 1fr}.stat{border-bottom:1px solid #222}.dash-head,.dash-row{grid-template-columns:1.5fr .7fr .8fr 1fr;padding:15px 10px}.hero h1{font-size:21vw}}
+</style>
+</head>
+<body>
+<div class="loader"><div class="loader-inner"><div class="loader-name">VASTRAMM</div><div class="loader-sub">BY MY3 / DIGITAL ATELIER</div></div></div>
+<div class="cursor"></div>
+<header class="top"><a class="brand" href="#">VASTRAMM <span>BY MY3</span></a><nav class="nav"><a href="#collection">Collection</a><a href="#story">Identity</a><a href="#numbers">Numbers</a><a href="#contact">Contact</a></nav><div class="menu">MENU / 03</div></header>
+
+<main>
+<section class="hero">
+<div class="gridlines"></div><div class="ring"></div>
+<div class="corner tl">MY3 / MOTHER COMPANY<br>VASTRAMM / DIGITAL ATELIER</div>
+<div class="corner br">SYSTEM 01.26<br>INDIA / GLOBAL</div>
+<div class="hero-content reveal"><div class="mono">A new language for clothing</div><h1>VASTR<i>AMM</i></h1><p>Clothing for the generation that moves between worlds. Precise silhouettes. Monochrome codes. A future-facing identity by VASTRAMM, under MY3.</p><a class="enter" href="#collection">ENTER THE ATELIER ↓</a></div>
+<div class="scroll">SCROLL / DISCOVER</div>
+</section>
+
+<section id="collection">
+<div class="section-label reveal">01 / THE COLLECTION</div><h2 class="title reveal">FORM<br><span>WITHOUT</span><br>NOISE.</h2>
+<div class="collection">
+<article class="card reveal"><div class="card-bg"><div class="coat"></div></div><div class="info"><b>V-01 / PHANTOM SHELL</b><span class="price">₹ 8,900</span><small>TECHNICAL OUTERWEAR / 142 SOLD THIS MONTH</small></div></article>
+<article class="card reveal"><div class="card-bg"><div class="coat"></div></div><div class="info"><b>V-02 / ZERO HOOD</b><span class="price">₹ 5,400</span><small>STRUCTURED FLEECE / 109 SOLD THIS MONTH</small></div></article>
+<article class="card reveal"><div class="card-bg"><div class="coat"></div></div><div class="info"><b>V-03 / VOID TROUSER</b><span class="price">₹ 6,200</span><small>MODULAR UTILITY / 75 SOLD THIS MONTH</small></div></article>
+</div>
+</section>
+
+<section id="story" class="story">
+<div class="story-copy"><div class="section-label reveal">02 / IDENTITY</div><h2 class="reveal">CLOTH.<br>CODE.<br><span>CULTURE.</span></h2><p class="reveal">VASTRAMM BY MY3 is built around one idea: clothing can be an interface. Every cut, texture and proportion is designed to feel deliberate, modern and unmistakably yours.</p><a class="enter reveal" href="#numbers">VIEW THE SYSTEM →</a></div>
+<div class="manifest"><div class="manifest-word">VASTRAMM</div></div>
+</section>
+
+<section id="numbers">
+<div class="section-label reveal">03 / COMMERCE INTELLIGENCE</div><h2 class="title reveal">THE<br><span>NUMBERS.</span></h2>
+<div class="stats reveal">
+<div class="stat"><label>TOTAL GOODS SOLD</label><strong>1,248</strong><small>ALL TIME / UNITS</small></div>
+<div class="stat"><label>THIS MONTH</label><strong>326</strong><small>SEPTEMBER 2026 / UNITS</small></div>
+<div class="stat"><label>MONTHLY REVENUE</label><strong>₹22.7L</strong><small>SEPTEMBER 2026</small></div>
+<div class="stat"><label>ACTIVE SKUS</label><strong>03</strong><small>COLLECTION 01</small></div>
+</div>
+<div class="dashboard reveal">
+<div class="dash-head"><span>PRODUCT</span><span>UNITS</span><span>REACH</span><span>STATUS</span></div>
+<div class="dash-row"><b>V-01 / PHANTOM SHELL</b><span>142</span><div class="bar"><i style="width:88%"></i></div><span class="status">HIGH DEMAND</span></div>
+<div class="dash-row"><b>V-02 / ZERO HOOD</b><span>109</span><div class="bar"><i style="width:69%"></i></div><span class="status">STEADY</span></div>
+<div class="dash-row"><b>V-03 / VOID TROUSER</b><span>75</span><div class="bar"><i style="width:48%"></i></div><span class="status">STEADY</span></div>
+</div>
+</section>
+
+<section>
+<div class="section-label reveal">04 / THE EXPERIENCE</div><h2 class="title reveal">AFTER<br><span>DARK.</span></h2>
+<div class="experience">
+<div class="experience-box reveal"><div class="exp-copy"><small>CAMPAIGN 001</small><b>CONCRETE / SILENCE</b></div></div>
+<div class="experience-box reveal"><div class="coordinates">26° 27' N / 80° 20' E<br>VASTRAMM BY MY3 / INDIA<br><br>FABRIC SYSTEM 04.02<br>FORM SYSTEM 09.17<br>DROP FREQUENCY 01</div><div class="quote">“THE FUTURE<br>DOESN'T NEED<br>A UNIFORM.”</div><div class="line"></div><div class="mono">DESIGNED FOR THE UNDEFINED.</div></div>
+</div>
+</section>
+</main>
+<footer id="contact"><div class="footer-brand">VASTRAMM</div><div class="footer-right">BY MY3 / MOTHER COMPANY<br>© 2026 VASTRAMM BY MY3<br>INSTAGRAM / CONTACT / STOCKISTS</div></footer>
+<script>
+const cur=document.querySelector('.cursor');
+addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px'});
+document.querySelectorAll('a,.card').forEach(el=>{el.onmouseenter=()=>cur.classList.add('on');el.onmouseleave=()=>cur.classList.remove('on')});
+const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(e=>observer.observe(e));
+</script>
+</body>
+</html>
