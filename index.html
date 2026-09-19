@@ -87,5 +87,17 @@ document.querySelectorAll('a,.card').forEach(el=>{el.onmouseenter=()=>cur.classL
 const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')}),{threshold:.12});
 document.querySelectorAll('.reveal').forEach(e=>observer.observe(e));
 </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://xzipzscjjvkjuzkmtxsj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_GlX_WAPD7MApMRMGGVvMxA_2NtPC_y9";
+
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+console.log("VASTRAMM connected to Supabase");
+</script>
 </body>
 </html>
