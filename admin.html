@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VASTRAMM — Admin Studio</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0a0a0a;color:#f5f5f5;font:14px Arial,sans-serif}
+button,input,textarea,select{font:inherit}button{cursor:pointer}.hidden{display:none}
+#login{min-height:100vh;display:grid;place-items:center}.card{background:#151515;border:1px solid #333;padding:30px;border-radius:14px;width:min(420px,92vw)}
+input,textarea,select{width:100%;background:#0d0d0d;color:#fff;border:1px solid #3a3a3a;border-radius:8px;padding:11px;margin:7px 0 14px}
+.btn{background:#fff;color:#000;border:0;border-radius:8px;padding:11px 16px;font-weight:700}.btn.secondary{background:#222;color:#fff;border:1px solid #444}
+#app{display:flex;min-height:100vh}.side{width:230px;border-right:1px solid #252525;padding:22px;position:fixed;height:100vh}.brand{font-weight:900;letter-spacing:2px;margin-bottom:25px}.nav button{display:block;width:100%;text-align:left;background:none;color:#aaa;border:0;padding:12px;border-radius:7px;margin:3px 0}.nav button.active,.nav button:hover{background:#1c1c1c;color:#fff}.main{margin-left:230px;padding:30px;width:calc(100% - 230px)}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}.stat{background:#151515;border:1px solid #292929;padding:18px;border-radius:12px}.stat b{font-size:25px;display:block;margin-top:8px}.panel{background:#111;border:1px solid #292929;border-radius:12px;padding:18px;margin-top:18px}.row{display:flex;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid #252525;padding:12px 0}.row:last-child{border-bottom:0}.muted{color:#888}.danger{color:#ff7777}.thumb{width:58px;height:58px;object-fit:cover;border-radius:7px;border:1px solid #333}.toast{position:fixed;right:20px;bottom:20px;background:#fff;color:#000;padding:12px 16px;border-radius:8px}
+@media(max-width:700px){.side{width:70px;padding:12px}.brand{font-size:0}.brand:after{content:"V";font-size:20px}.nav button{font-size:0;text-align:center}.nav button:before{content:"•";font-size:20px}.main{margin-left:70px;width:calc(100% - 70px);padding:18px}}
+</style>
+</head>
+<body>
+<div id="login">
+  <div class="card">
+    <h1>VASTRAMM</h1><p class="muted">Digital Atelier — Admin</p>
+    <label>Email</label><input id="email" type="email" placeholder="Admin email">
+    <label>Password</label><input id="password" type="password" placeholder="Password">
+    <button class="btn" id="loginBtn">Sign in</button>
+    <p id="loginMsg" class="muted"></p>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <aside class="side"><div class="brand">VASTRAMM</div><div class="nav">
+    <button data-page="dashboard" class="active">Dashboard</button>
+    <button data-page="products">Products</button>
+    <button data-page="numbers">Numbers</button>
+    <button data-page="collections">Collections</button>
+    <button data-page="pages">Pages</button>
+    <button data-page="media">Media</button>
+    <button data-page="orders">Orders</button>
+  </div></aside>
+  <main class="main">
+    <div class="top"><div><h2 id="title">Dashboard</h2><span class="muted">Connected to Supabase</span></div><button class="btn secondary" id="logout">Sign out</button></div>
+    <section id="content"></section>
+  </main>
+</div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+const SUPABASE_URL="https://xzipzscjjvkjuzkmtxsj.supabase.co";
+const SUPABASE_KEY="sb_publishable_GlX_WAPD7MApMRMGGVvMxA_2NtPC_y9";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const content=document.getElementById('content');
+const toast=(m)=>{let t=document.getElementById('toast');t.textContent=m;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),2200)};
+async function adminOK(){
+ const {data:{user}}=await db.auth.getUser();
+ if(!user)return false;
+ const {data}=await db.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();
+ return !!data;
+}
+async function boot(){
+ const {data:{session}}=await db.auth.getSession();
+ if(session && await adminOK()) showApp(); else showLogin();
+}
+function showLogin(){document.getElementById('login').classList.remove('hidden');document.getElementById('app').classList.add('hidden')}
+function showApp(){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');load('dashboard')}
+document.getElementById('loginBtn').onclick=async()=>{
+ const msg=document.getElementById('loginMsg'); msg.textContent='Signing in...';
+ const {error}=await db.auth.signInWithPassword({email:email.value.trim(),password:password.value});
+ if(error){msg.textContent=error.message;return}
+ if(!(await adminOK())){await db.auth.signOut();msg.textContent='This account is not a VASTRAMM admin.';return}
+ showApp();
+};
+document.getElementById('logout').onclick=async()=>{await db.auth.signOut();showLogin()};
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');load(b.dataset.page)});
+
+async function count(t){const {count,error}=await db.from(t).select('*',{count:'exact',head:true});return error?0:count||0}
+async function load(p){
+ document.getElementById('title').textContent=p[0].toUpperCase()+p.slice(1);
+ if(p==='dashboard')return dashboard();
+ if(p==='products')return products();
+ if(p==='numbers')return numbers();
+ if(p==='media')return media();
+ return simple(p);
+}
+async function dashboard(){
+ const [pr,nu,or,pg,me]=await Promise.all(['products','numbers','orders','pages','media'].map(count));
+ content.innerHTML=`<div class="grid">${[['Products',pr],['Numbers',nu],['Orders',or],['Pages',pg],['Media',me]].map(x=>`<div class="stat">${x[0]}<b>${x[1]}</b></div>`).join('')}</div><div class="panel"><h3>VASTRAMM Admin</h3><p class="muted">Your admin panel is connected to Supabase. Use the sections on the left to manage your store.</p></div>`;
+}
+async function products(){
+ const {data,error}=await db.from('products').select('*').order('sort_order');
+ if(error)return content.innerHTML=`<div class="panel">${error.message}</div>`;
+ content.innerHTML=`<div class="panel"><div class="top"><h3>Products</h3><button class="btn" onclick="newProduct()">+ Add product</button></div>${data.map(x=>`<div class="row"><div><b>${x.name}</b><div class="muted">${x.sku} · ₹${Number(x.price).toLocaleString('en-IN')} · ${x.stock} stock</div></div><button class="btn secondary" onclick="editProduct('${x.id}')">Edit</button></div>`).join('')}</div>`;
+}
+window.newProduct=()=>productForm();
+window.editProduct=async id=>{let {data}=await db.from('products').select('*').eq('id',id).single();productForm(data)};
+function productForm(x={}){
+ content.innerHTML=`<div class="panel"><h3>${x.id?'Edit':'Add'} product</h3>
+ <label>SKU</label><input id="fsku" value="${x.sku||''}">
+ <label>Name</label><input id="fname" value="${x.name||''}">
+ <label>Slug</label><input id="fslug" value="${x.slug||''}">
+ <label>Price</label><input id="fprice" type="number" value="${x.price||0}">
+ <label>Stock</label><input id="fstock" type="number" value="${x.stock||0}">
+ <label>Description</label><textarea id="fdesc">${x.description||''}</textarea>
+ <button class="btn" onclick="saveProduct('${x.id||''}')">Save product</button> <button class="btn secondary" onclick="products()">Cancel</button></div>`;
+}
+window.saveProduct=async id=>{
+ let row={sku:fsku.value.trim(),name:fname.value.trim(),slug:fslug.value.trim(),price:Number(fprice.value),stock:Number(fstock.value),description:fdesc.value};
+ let r=id?await db.from('products').update(row).eq('id',id):await db.from('products').insert(row);
+ if(r.error)toast(r.error.message);else{toast('Product saved');products()}
+};
+async function numbers(){
+ const {data,error}=await db.from('numbers').select('*').order('sort_order');
+ if(error)return content.innerHTML=`<div class="panel">${error.message}</div>`;
+ content.innerHTML=`<div class="panel"><h3>THE NUMBERS</h3>${data.map(x=>`<div class="row"><div><b>${x.label}</b><div class="muted">${x.value}</div></div><button class="btn secondary" onclick="editNumber('${x.id}')">Edit</button></div>`).join('')}</div>`;
+}
+window.editNumber=async id=>{let {data}=await db.from('numbers').select('*').eq('id',id).single();content.innerHTML=`<div class="panel"><h3>Edit statistic</h3><label>Label</label><input id="nl" value="${data.label}"><label>Value</label><input id="nv" value="${data.value}"><label>Description</label><input id="nd" value="${data.description||''}"><button class="btn" onclick="saveNumber('${id}')">Save</button> <button class="btn secondary" onclick="numbers()">Cancel</button></div>`};
+window.saveNumber=async id=>{let r=await db.from('numbers').update({label:nl.value,value:nv.value,description:nd.value}).eq('id',id);if(r.error)toast(r.error.message);else{toast('Saved');numbers()}};
+async function media(){
+ const {data,error}=await db.storage.from('vastramm-media').list('',{limit:100,sortBy:{column:'created_at',order:'desc'}});
+ if(error)return content.innerHTML=`<div class="panel">${error.message}</div>`;
+ content.innerHTML=`<div class="panel"><h3>Media Library</h3><input id="file" type="file" multiple accept="image/*"><button class="btn" onclick="uploadMedia()">Upload images</button><div class="grid" style="margin-top:18px">${data.map(x=>{let u=db.storage.from('vastramm-media').getPublicUrl(x.name).data.publicUrl;return `<div class="stat"><img class="thumb" src="${u}"><div style="word-break:break-all;margin-top:8px">${x.name}</div></div>`}).join('')}</div></div>`;
+}
+window.uploadMedia=async()=>{let files=[...file.files];if(!files.length)return toast('Choose images first');for(const f of files){let path=Date.now()+'-'+f.name.replace(/[^a-zA-Z0-9._-]/g,'-');let r=await db.storage.from('vastramm-media').upload(path,f,{upsert:false});if(r.error)return toast(r.error.message);let u=db.storage.from('vastramm-media').getPublicUrl(path).data.publicUrl;await db.from('media').insert({file_name:f.name,file_url:u,file_type:f.type,file_size:f.size})}toast('Images uploaded');media()};
+async function simple(p){let table=p==='collections'?'collections':p;let {data,error}=await db.from(table).select('*').limit(100);content.innerHTML=`<div class="panel"><h3>${p[0].toUpperCase()+p.slice(1)}</h3>${error?error.message:(data.length?data.map(x=>`<div class="row"><b>${x.name||x.title||x.order_number||x.label||x.setting_key||x.slug||x.id}</b><span class="muted">${x.created_at?new Date(x.created_at).toLocaleDateString():''}</span></div>`).join(''):'No records yet.')}</div>`}
+boot();
+</script>
+</body>
+</html>
