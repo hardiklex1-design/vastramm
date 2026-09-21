@@ -45,15 +45,33 @@ const SUPABASE_URL="https://xzipzscjjvkjuzkmtxsj.supabase.co";
 const SUPABASE_KEY="sb_publishable_GlX_WAPD7MApMRMGGVvMxA_2NtPC_y9";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-async function loadStore(){try{const [{data:products},{data:numbers},{data:settings},{data:nav},{data:productMeta}]=await Promise.all([db.from('products').select('*').order('created_at',{ascending:true}),db.from('numbers').select('*').eq('visible',true).order('sort_order',{ascending:true}),db.from('site_settings').select('*').eq('setting_key','homepage').maybeSingle(),db.from('navigation').select('*').eq('visible',true).order('sort_order',{ascending:true}),db.from('site_settings').select('*').like('setting_key','product_meta_%')]);const v=settings?.setting_value||{};if(v.hero_heading)document.querySelector('.hero h1').innerHTML=esc(v.hero_heading).replace(/\n/g,'<br>');if(v.hero_description)document.querySelector('.hero p').textContent=v.hero_description;if(v.cta_label){const a=document.querySelector('.hero .btn');a.textContent=v.cta_label+' →';if(v.cta_url)a.href=v.cta_url}if(v.hero_image)document.querySelector('.hero').style.backgroundImage=`linear-gradient(90deg,rgba(8,8,8,.92),rgba(8,8,8,.25)),url("${v.hero_image}")`;if(v.story_title)document.querySelector('#atelier h2').innerHTML=esc(v.story_title).replace(/\n/g,'<br>');if(v.story_description){const ps=document.querySelectorAll('#atelier p');if(ps[0])ps[0].textContent=v.story_description}if(Array.isArray(nav)&&nav.length)document.querySelector('.links').innerHTML=nav.map(n=>`<a href="${esc(n.url)}">${esc(n.label)}</a>`).join('');const metaById={};(productMeta||[]).forEach(function(s){metaById[String(s.setting_key).replace('product_meta_','')]=s.setting_value||{}});if(Array.isArray(products)&&products.length){
-const base=[
-{sku:"V-01",name:"PHANTOM SHELL",price:8900},{sku:"V-02",name:"ZERO HOOD",price:5400},{sku:"V-03",name:"VOID TROUSER",price:6200},
-{sku:"V-04",name:"NOIR OVERSHIRT",price:7800},{sku:"V-05",name:"ATELIER TEE",price:3200},{sku:"V-06",name:"VANTA CARGO",price:6900},
-{sku:"V-07",name:"MONOLITH JACKET",price:11900},{sku:"V-08",name:"ECLIPSE SHIRT",price:5900},{sku:"V-09",name:"ARCHIVE HOODIE",price:6400}
-];
-const bySku={};products.forEach(x=>{bySku[String(x.sku||"").toUpperCase()]=x});
-const merged=base.map(b=>bySku[b.sku]||b);
-document.querySelector('.products').innerHTML=merged.map(x=>{const m=metaById[String(x.id)]||{};const img=Array.isArray(m.images)?m.images[0]:'';return '<a class="product" href="product.html?sku='+encodeURIComponent(x.sku||"")+'"><div class="pic" '+(img?'style="background-image:linear-gradient(135deg,rgba(30,30,30,.25),rgba(5,5,5,.75)),url(\''+esc(img)+'\');background-size:cover;background-position:center"':'')+'>'+(!img?esc(x.sku||'VASTRAMM'):'')+'</div><div class="details"><h3>'+esc(x.name)+'</h3><div class="price">₹'+Number(x.price||0).toLocaleString('en-IN')+'</div><span class="pill">'+(m.status==='soldout'?'SOLD OUT':m.featured?'FEATURED':'AVAILABLE')+'</span></div></a>'}).join('');
-document.querySelector('#collection .head .muted').textContent='09 / 09 pieces'
-}if(Array.isArray(numbers)&&numbers.length)document.querySelector('.numbers').innerHTML=numbers.map(n=>`<div class="number"><b>${esc(n.value)}</b><span>${esc(n.label)}</span></div>`).join('')}catch(e){console.warn('VASTRAMM live data unavailable; showing built-in preview.',e)}}loadStore();
+async function loadStore(){
+try{
+ const [{data:products},{data:numbers},{data:settings},{data:nav},{data:productMeta},{data:numbersOverride}]=await Promise.all([
+ db.from('products').select('*').order('created_at',{ascending:true}),
+ db.from('numbers').select('*').eq('visible',true).order('sort_order',{ascending:true}),
+ db.from('site_settings').select('*').eq('setting_key','homepage').maybeSingle(),
+ db.from('navigation').select('*').eq('visible',true).order('sort_order',{ascending:true}),
+ db.from('site_settings').select('*').like('setting_key','product_meta_%'),
+ db.from('site_settings').select('setting_value').eq('setting_key','numbers_override').maybeSingle()
+ ]);
+ const v=settings?.setting_value||{};
+ if(v.hero_heading)document.querySelector('.hero h1').innerHTML=esc(v.hero_heading).replace(/\n/g,'<br>');
+ if(v.hero_description)document.querySelector('.hero p').textContent=v.hero_description;
+ if(v.cta_label){const a=document.querySelector('.hero .btn');a.textContent=v.cta_label+' →';if(v.cta_url)a.href=v.cta_url}
+ if(v.hero_image)document.querySelector('.hero').style.backgroundImage='linear-gradient(90deg,rgba(8,8,8,.92),rgba(8,8,8,.25)),url("'+v.hero_image+'")';
+ if(v.story_title)document.querySelector('#atelier h2').innerHTML=esc(v.story_title).replace(/\n/g,'<br>');
+ if(v.story_description){const ps=document.querySelectorAll('#atelier p');if(ps[0])ps[0].textContent=v.story_description}
+ if(Array.isArray(nav)&&nav.length)document.querySelector('.links').innerHTML=nav.map(n=>'<a href="'+esc(n.url)+'">'+esc(n.label)+'</a>').join('');
+ const metaById={};(productMeta||[]).forEach(function(s){metaById[String(s.setting_key).replace('product_meta_','')]=s.setting_value||{}});
+ if(Array.isArray(products)&&products.length){
+  const base=[{sku:'V-01',name:'PHANTOM SHELL',price:8900},{sku:'V-02',name:'ZERO HOOD',price:5400},{sku:'V-03',name:'VOID TROUSER',price:6200},{sku:'V-04',name:'NOIR OVERSHIRT',price:7800},{sku:'V-05',name:'ATELIER TEE',price:3200},{sku:'V-06',name:'VANTA CARGO',price:6900},{sku:'V-07',name:'MONOLITH JACKET',price:11900},{sku:'V-08',name:'ECLIPSE SHIRT',price:5900},{sku:'V-09',name:'ARCHIVE HOODIE',price:6400}];
+  const bySku={};products.forEach(x=>{bySku[String(x.sku||'').toUpperCase()]=x});const merged=base.map(b=>bySku[b.sku]||b);
+  document.querySelector('.products').innerHTML=merged.map(x=>{const m=metaById[String(x.id)]||{};const img=Array.isArray(m.images)?m.images[0]:'';return '<a class="product" href="product.html?sku='+encodeURIComponent(x.sku||'')+'"><div class="pic" '+(img?'style="background-image:linear-gradient(135deg,rgba(30,30,30,.25),rgba(5,5,5,.75)),url(\\''+esc(img)+'\\');background-size:cover;background-position:center"':'')+'>'+(!img?esc(x.sku||'VASTRAMM'):'')+'</div><div class="details"><h3>'+esc(x.name)+'</h3><div class="price">₹'+Number(x.price||0).toLocaleString('en-IN')+'</div><span class="pill">'+(m.status==='soldout'?'SOLD OUT':m.featured?'FEATURED':'AVAILABLE')+'</span></div></a>'}).join('');
+  document.querySelector('#collection .head .muted').textContent='09 / 09 pieces';
+ }
+ const liveNumbers=(numbersOverride&&Array.isArray(numbersOverride.setting_value))?numbersOverride.setting_value:numbers;
+ if(Array.isArray(liveNumbers)&&liveNumbers.length)document.querySelector('.numbers').innerHTML=liveNumbers.filter(n=>n.visible!==false).sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0)).map(n=>'<div class="number"><b>'+esc(n.value)+'</b><span>'+esc(n.label)+'</span></div>').join('');
+}catch(e){console.warn('VASTRAMM live data unavailable; showing built-in preview.',e)}
+}loadStore();
 </script></body></html>
