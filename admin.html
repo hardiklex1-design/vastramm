@@ -323,10 +323,10 @@ window.saveBrandPage=async function(kind){
 };
 
 async function settings(){
- const r=await db.from('site_settings').select('*').order('key');
- content.innerHTML='<div class="panel"><h3>Store Settings</h3><label>Key</label><input id="sk"><label>Value</label><textarea id="sv" rows="5"></textarea><button class="btn" onclick="saveSetting()">Save</button></div><div class="panel"><h3>Existing settings</h3>'+(r.data||[]).map(function(x){return '<div class="row"><div><b>'+x.key+'</b><div class="muted">'+JSON.stringify(x.setting_value)+'</div></div><button class="btn secondary" onclick="loadSetting(\''+x.key.replace(/'/g,"\\'")+'\')">Edit</button></div>'}).join('')+'</div>';
+ const r=await db.from('site_settings').select('*').order('setting_key');
+ content.innerHTML='<div class="panel"><h3>Store Settings</h3><label>Key</label><input id="sk"><label>Value</label><textarea id="sv" rows="5"></textarea><button class="btn" onclick="saveSetting()">Save</button></div><div class="panel"><h3>Existing settings</h3>'+(r.data||[]).map(function(x){return '<div class="row"><div><b>'+x.setting_key+'</b><div class="muted">'+JSON.stringify(x.setting_value)+'</div></div><button class="btn secondary" onclick="loadSetting(\''+x.setting_key.replace(/'/g,"\\'")+'\')">Edit</button></div>'}).join('')+'</div>';
 }
-window.loadSetting=async function(key){const r=await db.from('site_settings').select('*').eq('setting_key',key).single();if(r.data){document.getElementById('sk').value=r.data.key;document.getElementById('sv').value=typeof r.data.setting_value==='string'?r.data.setting_value:JSON.stringify(r.data.setting_value,null,2)}};
+window.loadSetting=async function(key){const r=await db.from('site_settings').select('*').eq('setting_key',key).single();if(r.data){document.getElementById('sk').value=r.data.setting_key;document.getElementById('sv').value=typeof r.data.setting_value==='string'?r.data.setting_value:JSON.stringify(r.data.setting_value,null,2)}};
 window.saveSetting=async function(){let v=document.getElementById('sv').value;try{v=JSON.parse(v)}catch(e){}const r=await db.from('site_settings').upsert({setting_key:document.getElementById('sk').value.trim(),setting_value:v},{onConflict:'setting_key'});if(r.error)toast(r.error.message);else{toast('Setting saved');settings()}};
 window.deleteProduct=async function(id){if(!confirm('Delete this product?'))return;const r=await db.from('products').delete().eq('id',id);if(r.error)toast(r.error.message);else{await db.from('site_settings').delete().eq('setting_key','product_meta_'+id);toast('Product deleted');products()}};
 
