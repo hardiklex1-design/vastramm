@@ -22,7 +22,7 @@ input,textarea,select{width:100%;background:#0d0d0d;color:#fff;border:1px solid 
     <label>Email</label><input id="email" type="email" placeholder="Admin email">
     <label>Password</label><input id="password" type="password" placeholder="Password">
     <button class="btn" id="loginBtn">Sign in</button>
-    <p id="loginMsg" class="muted"></p>
+    <p id="loginMsg" class="muted"></p><p id="loginHelp" class="muted" style="font-size:12px;line-height:1.5"></p>
   </div>
 </div>
 
@@ -56,7 +56,7 @@ async function adminOK(){
  return String(user.email||'').toLowerCase()==='hardiklex1@gmail.com';
 }
 async function signInWithTimeout(email,password){
- const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Supabase sign-in timed out. Please refresh and try again.')),12000));
+ const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('The login request was blocked or timed out. Turn OFF Brave Shields for vastramm.co.in, then try again.')),8000));
  return Promise.race([db.auth.signInWithPassword({email,password}),timeout]);
 }
 async function boot(){
@@ -66,13 +66,13 @@ async function boot(){
 function showLogin(){document.getElementById('login').classList.remove('hidden');document.getElementById('app').classList.add('hidden')}
 function showApp(){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');load('dashboard')}
 document.getElementById('loginBtn').onclick=async()=>{
- const msg=document.getElementById('loginMsg'); msg.textContent='Signing in...';
+ const msg=document.getElementById('loginMsg'); const help=document.getElementById('loginHelp'); msg.textContent='Signing in...'; help.textContent='Connecting securely to VASTRAMM authentication…';
  try{
  const {error}=await signInWithTimeout(document.getElementById("email").value.trim(),document.getElementById("password").value);
  if(error){msg.textContent=error.message;return}
  if(!(await adminOK())){await db.auth.signOut();msg.textContent='This account is not a VASTRAMM admin.';return}
  showApp();
-}catch(e){msg.textContent=e.message||'Unable to sign in. Please try again.';}
+}catch(e){msg.textContent=e.message||'Unable to sign in. Please try again.'; help.textContent='If you use Brave, click the lion icon near the address bar and turn Shields OFF for this site, then reload.';}
 };
 document.getElementById('logout').onclick=async()=>{await db.auth.signOut();showLogin()};
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');load(b.dataset.page)});
