@@ -158,6 +158,7 @@ async function productColumns(){
 }
 async function getProductMeta(id){
  const r=await db.from('site_settings').select('value').eq('key','product_meta_'+id).maybeSingle();
+ if(r.error)throw r.error;
  return r.data&&r.data.value?r.data.value:{};
 }
 async function saveProductMeta(id,value){
@@ -166,10 +167,10 @@ async function saveProductMeta(id,value){
 }
 async function products(){
  const {data,error}=await db.from('products').select('*').order('sort_order',{ascending:true});
- if(error)return content.innerHTML='<div class="panel">'+error.message+'</div>';
+ if(error)return content.innerHTML='<div class="panel">'+esc(error.message)+'</div>';
  const list=await Promise.all((data||[]).map(async x=>({x,meta:await getProductMeta(x.id)})));
  content.innerHTML='<div class="panel"><div class="top"><h3>Products</h3><button class="btn" onclick="newProduct()">+ Add product</button></div>'+
- list.map(function(o){const x=o.x,m=o.meta||{};return '<div class="row"><div><b>'+esc(x.name||'Untitled')+'</b><div class="muted">'+esc(x.sku||'')+' · ₹'+Number(x.price||0).toLocaleString('en-IN')+' · '+Number(x.stock||0)+' stock · '+(m.status||'available')+(m.featured?' · FEATURED':'')+'</div></div><button class="btn secondary" onclick="editProduct(\''+x.id+'\')">Edit</button></div>'}).join('')+
+ list.map(function(o){const x=o.x,m=o.meta||{};return '<div class="row"><div><b>'+esc(x.name||'Untitled')+'</b><div class="muted">'+esc(x.sku||'')+' · ₹'+Number(x.price||0).toLocaleString('en-IN')+' · '+Number(x.stock||0)+' stock · '+(m.images?m.images.length:0)+' images · '+(m.status||'available')+(m.featured?' · FEATURED':'')+'</div></div><button class="btn secondary" onclick="editProduct(\''+x.id+'\')">Edit</button></div>'}).join('')+
  '</div>';
 }
 window.newProduct=()=>productForm();
@@ -190,14 +191,25 @@ function productForm(x={}){
  '<label>Stock</label><input id="fstock" type="number" value="'+(x.stock||0)+'">'+
  '<label>Status</label><select id="fstatus"><option value="available" '+((meta.status||'available')==='available'?'selected':'')+'>Available</option><option value="soldout" '+(meta.status==='soldout'?'selected':'')+'>Sold out</option></select>'+
  '<label>Description</label><textarea id="fdesc" rows="5">'+esc(x.description||'')+'</textarea>'+
- '<label>Product images</label><input id="fimages" type="file" multiple accept="image/*"><div class="muted" style="font-size:12px;margin:-7px 0 12px">You can select multiple images from phone or computer.</div>'+
- '<div id="existingImgs">'+(imgs.length?imgs.map(function(u,i){return '<div class="row"><img class="thumb" src="'+esc(u)+'"><span class="muted">Image '+(i+1)+'</span></div>'}).join(''):'<div class="muted">No saved images yet.</div>')+'</div>'+
- '<label>Image URLs (optional, one per line)</label><textarea id="furls" rows="4">'+imgs.join('\n')+'</textarea>'+
+ '<label>Product images — select MULTIPLE images</label><input id="fimages" type="file" multiple accept="image/*" onchange="previewProductImages()">'+
+ '<div class="muted" style="font-size:12px;margin:-7px 0 12px">You can select several images at once. They will all be saved to this product.</div>'+
+ '<div id="imagePreview" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr));margin:10px 0">'+imgs.map(function(u,i){return '<div class="stat"><img class="thumb" style="width:100%;height:110px" src="'+esc(u)+'"><div style="font-size:11px;margin-top:6px">Saved image '+(i+1)+'</div></div>'}).join('')+'</div>'+
+ '<label>Image URLs (optional, one per line)</label><textarea id="furls" rows="4">'+imgs.map(esc).join('\n')+'</textarea>'+
  '<label><input id="ffeatured" type="checkbox" style="width:auto" '+(meta.featured?'checked':'')+'> Featured</label><br><br>'+
- '<button class="btn" onclick="saveProduct(\''+(x.id||'')+'\')">Save product</button> <button class="btn secondary" onclick="products()">Cancel</button>'+
+ '<button class="btn" onclick="saveProduct(\''+(x.id||'')+'\')">'+(x.id?'Save & Publish changes':'Save & Publish product')+'</button> <button class="btn secondary" onclick="products()">Cancel</button>'+
  (x.id?' <button class="btn secondary" onclick="deleteProduct(\''+x.id+'\')">Delete</button>':'')+
  '</div>';
 }
+window.previewProductImages=function(){
+ const box=document.getElementById('imagePreview'),files=Array.from(document.getElementById('fimages').files||[]);
+ if(!box||!files.length)return;
+ files.forEach(function(file){
+  const u=URL.createObjectURL(file);
+  const d=document.createElement('div');d.className='stat';
+  d.innerHTML='<img class="thumb" style="width:100%;height:110px" src="'+u+'"><div style="font-size:11px;margin-top:6px">'+esc(file.name)+'</div>';
+  box.appendChild(d);
+ });
+};
 async function compressImage(file){
  return new Promise(function(resolve,reject){
   const img=new Image(),url=URL.createObjectURL(file);
@@ -221,52 +233,29 @@ async function uploadProductImage(file){
 }
 function pickProductRow(columns,desired){
  const row={};
- const aliases={
-  sku:['sku'],name:['name'],slug:['slug'],price:['price'],stock:['stock'],description:['description']
- };
- Object.keys(aliases).forEach(function(k){
-  const col=aliases[k].find(function(z){return columns.includes(z)});
-  if(col)row[col]=desired[k];
- });
+ ['sku','name','slug','price','stock','description'].forEach(function(k){if(columns.includes(k))row[k]=desired[k]});
  return row;
 }
 window.saveProduct=async function(id){
  try{
-  const desired={
-   sku:document.getElementById('fsku').value.trim(),
-   name:document.getElementById('fname').value.trim(),
-   slug:document.getElementById('fslug').value.trim(),
-   price:Number(document.getElementById('fprice').value||0),
-   stock:Number(document.getElementById('fstock').value||0),
-   description:document.getElementById('fdesc').value
-  };
+  const desired={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:Number(document.getElementById('fstock').value||0),description:document.getElementById('fdesc').value};
   if(!desired.name)throw new Error('Product name is required.');
-  const columns=await productColumns();
-  const row=pickProductRow(columns,desired);
-  const required=['name'];
-  if(!required.every(k=>Object.keys(row).some(col=>row[col]===desired[k])))throw new Error('Your products table is missing the basic product name field.');
-  let r=id?await db.from('products').update(row).eq('id',id):await db.from('products').insert(row);
+  const columns=await productColumns(),row=pickProductRow(columns,desired);
+  if(!columns.includes('name'))throw new Error('Your products table is missing the name field.');
+  let r;
+  if(id) r=await db.from('products').update(row).eq('id',id).select().single();
+  else r=await db.from('products').insert(row).select().single();
   if(r.error)throw r.error;
-
-  let productId=id;
-  if(!productId){
-   const q=await db.from('products').select('*').eq('sku',desired.sku).eq('name',desired.name).limit(1);
-   if(!q.error&&q.data&&q.data[0])productId=q.data[0].id;
-   if(!productId)throw new Error('Product saved, but its new ID could not be read back.');
-  }
-
-  let images=(await getProductMeta(productId)).images||[];
+  const productId=r.data?.id||id;
+  if(!productId)throw new Error('Product saved, but its ID could not be read back.');
+  const old=await getProductMeta(productId);
+  let images=Array.isArray(old.images)?old.images:[];
   const manual=document.getElementById('furls').value.split('\n').map(function(v){return v.trim()}).filter(Boolean);
   if(manual.length)images=manual;
   const files=Array.from(document.getElementById('fimages').files||[]);
-  for(const file of files)images.push(await uploadProductImage(file));
-
-  await saveProductMeta(productId,{
-   images:images,
-   status:document.getElementById('fstatus').value,
-   featured:document.getElementById('ffeatured').checked
-  });
-  toast('Product saved successfully');
+  for(let i=0;i<files.length;i++){images.push(await uploadProductImage(files[i]));}
+  await saveProductMeta(productId,{images:images,status:document.getElementById('fstatus').value,featured:document.getElementById('ffeatured').checked});
+  toast('Product saved and published');
   products();
  }catch(e){toast(e.message||'Could not save product')}
 };
