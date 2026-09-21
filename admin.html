@@ -54,7 +54,7 @@ input,textarea,select{width:100%;background:#0d0d0d;color:#fff;border:1px solid 
     <button data-page="collections">Collections</button>
     <button data-page="pages">Pages</button>
     <button data-page="media">Media</button>
-    <button data-page="orders">Orders</button><button data-page="homepage">Homepage</button><button data-page="navigation">Navigation</button><button data-page="settings">Settings</button>
+    <button data-page="orders">Orders</button><button data-page="homepage">Homepage</button><button data-page="navigation">Navigation</button><button data-page="settings">Settings</button><button data-page="story">Story</button><button data-page="my3">MY3</button><button data-page="contact">Contact</button>
   </div></aside>
   <main class="main">
     <div class="top"><div><h2 id="title">Dashboard</h2><span class="muted">Connected to Supabase</span></div><button class="btn secondary" id="logout">Sign out</button></div>
@@ -137,6 +137,9 @@ async function load(p){
  if(p==='homepage')return homepage();
  if(p==='navigation')return navigation();
  if(p==='settings')return settings();
+ if(p==='story')return brandPage('story');
+ if(p==='my3')return brandPage('my3');
+ if(p==='contact')return brandPage('contact');
  return simple(p);
 }
 async function dashboard(){
@@ -196,6 +199,29 @@ window.saveNav=async function(id){
  if(r.error)toast(r.error.message);else{toast('Navigation saved');navigation()}
 };
 window.deleteNav=async function(id){if(!confirm('Delete this link?'))return;const r=await db.from('navigation').delete().eq('id',id);if(r.error)toast(r.error.message);else navigation()};
+async function brandPage(kind){
+ const r=await db.from('site_settings').select('*').eq('key',kind+'_page').maybeSingle();
+ const v=r.data&&r.data.value?r.data.value:{};
+ const defaults={
+ story:{eyebrow:'VASTRAMM BY MY3 / OUR STORY',title:'BUILT FROM\\nIDENTITY.',intro:'VASTRAMM BY MY3 is a contemporary Indian label built around the belief that clothing can feel both deeply rooted and completely new.',beginTitle:'FROM AN IDEA TO AN ATELIER.',beginText:'VASTRAMM began with a simple question: what happens when Indian fashion language meets the precision, restraint and attitude of modern streetwear?',methodTitle:'FEWER PIECES.\\nSTRONGER IMPACT.',methodText:'Each release is treated like an atelier project. We focus on fabric, fit, proportion, finishing and the feeling a piece creates.',manifesto:'INDIAN ROOTS.\\nGLOBAL ATTITUDE.\\nNO COMPROMISE.'},
+ my3:{eyebrow:'VASTRAMM BY MY3 / THE MARK',title:'THE NAME\\nBEHIND THE LABEL.',intro:'MY3 is the signature mark behind VASTRAMM — a compact identity designed to feel personal, memorable and unmistakably ours.',whyTitle:'A SMALL MARK WITH A BIGGER IDEA.',whyText:'MY3 represents the identity behind VASTRAMM. It is deliberately short, direct and easy to recognize.',symbolTitle:'THREE CHARACTERS.\\nONE IDENTITY.',symbolText:'The “MY” gives the mark a personal feeling, while the “3” gives it a sharp visual ending.',principles:'PERSONAL.\\nMINIMAL.\\nICONIC.'},
+ contact:{eyebrow:'VASTRAMM BY MY3 / CONTACT',title:'LET’S\\nTALK.',intro:'For orders, collaborations, press, wholesale and general enquiries, reach out to VASTRAMM.',email:'hello@vastramm.co.in',instagram:'@vastramm',phone:'',address:'India'}
+ }[kind];
+ const x=Object.assign({},defaults,v);
+ const fields=kind==='story'
+ ? [['eyebrow','Eyebrow'],['title','Main title'],['intro','Introduction'],['beginTitle','Beginning title'],['beginText','Beginning text'],['methodTitle','Method title'],['methodText','Method text'],['manifesto','Manifesto']]
+ : kind==='my3'
+ ? [['eyebrow','Eyebrow'],['title','Main title'],['intro','Introduction'],['whyTitle','Why MY3 title'],['whyText','Why MY3 text'],['symbolTitle','Symbol title'],['symbolText','Symbol text'],['principles','Principles']]
+ : [['eyebrow','Eyebrow'],['title','Main title'],['intro','Introduction'],['email','Email'],['instagram','Instagram'],['phone','Phone'],['address','Address']];
+ content.innerHTML='<div class="panel"><h3>'+kind.toUpperCase()+' Page Editor</h3>'+fields.map(function(f){return '<label>'+f[1]+'</label><textarea id="bp_'+f[0]+'" rows="'+(f[0].toLowerCase().includes('title')||f[0]==='eyebrow'||f[0]==='email'||f[0]==='phone'||f[0]==='instagram'?'2':'4')+'">'+(x[f[0]]||'')+'</textarea>'}).join('')+'<button class="btn" onclick="saveBrandPage(\''+kind+'\')">Save '+kind+' page</button></div>';
+}
+window.saveBrandPage=async function(kind){
+ const keys=kind==='story'?['eyebrow','title','intro','beginTitle','beginText','methodTitle','methodText','manifesto']:kind==='my3'?['eyebrow','title','intro','whyTitle','whyText','symbolTitle','symbolText','principles']:['eyebrow','title','intro','email','instagram','phone','address'];
+ const value={};keys.forEach(function(k){value[k]=document.getElementById('bp_'+k).value});
+ const r=await db.from('site_settings').upsert({key:kind+'_page',value:value},{onConflict:'key'});
+ if(r.error)toast(r.error.message);else toast(kind.toUpperCase()+' page saved');
+};
+
 async function settings(){
  const r=await db.from('site_settings').select('*').order('key');
  content.innerHTML='<div class="panel"><h3>Store Settings</h3><label>Key</label><input id="sk"><label>Value</label><textarea id="sv" rows="5"></textarea><button class="btn" onclick="saveSetting()">Save</button></div><div class="panel"><h3>Existing settings</h3>'+(r.data||[]).map(function(x){return '<div class="row"><div><b>'+x.key+'</b><div class="muted">'+JSON.stringify(x.value)+'</div></div><button class="btn secondary" onclick="loadSetting(\''+x.key.replace(/'/g,"\\'")+'\')">Edit</button></div>'}).join('')+'</div>';
