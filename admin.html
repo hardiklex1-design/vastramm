@@ -157,7 +157,7 @@ async function products(){
 }
 window.newProduct=()=>productForm();
 window.editProduct=async id=>{let {data}=await db.from('products').select('*').eq('id',id).single();productForm(data)};
-function productForm(x={}){const imgs=Array.isArray(x.image_urls)?x.image_urls:[];content.innerHTML='<div class="panel"><h3>'+(x.id?'Edit':'Add')+' product</h3><label>SKU</label><input id="fsku" value="'+(x.sku||'')+'"><label>Name</label><input id="fname" value="'+(x.name||'')+'"><label>Slug</label><input id="fslug" value="'+(x.slug||'')+'"><label>Price</label><input id="fprice" type="number" value="'+(x.price||0)+'"><label>Stock</label><input id="fstock" type="number" value="'+(x.stock||0)+'"><label>Status</label><select id="fstatus"><option value="available" '+(x.status==='available'?'selected':'')+'>Available</option><option value="soldout" '+(x.status==='soldout'?'selected':'')+'>Sold out</option></select><label>Description</label><textarea id="fdesc" rows="5">'+(x.description||'')+'</textarea><label>Product images</label><input id="fimages" type="file" multiple accept="image/*"><label>Existing image URLs (one per line)</label><textarea id="furls" rows="4">'+imgs.join('\n')+'</textarea><label><input id="ffeatured" type="checkbox" style="width:auto" '+(x.featured?'checked':'')+'> Featured</label><br><br><button class="btn" onclick="saveProduct(\''+(x.id||'')+'\')">Save product</button> <button class="btn secondary" onclick="products()">Cancel</button>'+(x.id?' <button class="btn secondary" onclick="deleteProduct(\''+x.id+'\')">Delete</button>':'')+'</div>';}
+function productForm(x={}){const imgs=Array.isArray(x.image_urls)?x.image_urls:(x.image_url?[x.image_url]:[]);content.innerHTML='<div class="panel"><h3>'+(x.id?'Edit':'Add')+' product</h3><label>SKU</label><input id="fsku" value="'+(x.sku||'')+'"><label>Name</label><input id="fname" value="'+(x.name||'')+'"><label>Slug</label><input id="fslug" value="'+(x.slug||'')+'"><label>Price</label><input id="fprice" type="number" value="'+(x.price||0)+'"><label>Stock</label><input id="fstock" type="number" value="'+(x.stock||0)+'"><label>Status</label><select id="fstatus"><option value="available" '+(x.status==='available'?'selected':'')+'>Available</option><option value="soldout" '+(x.status==='soldout'?'selected':'')+'>Sold out</option></select><label>Description</label><textarea id="fdesc" rows="5">'+(x.description||'')+'</textarea><label>Product images</label><input id="fimages" type="file" multiple accept="image/*"><label>Existing image URLs (one per line)</label><textarea id="furls" rows="4">'+imgs.join('\n')+'</textarea><label><input id="ffeatured" type="checkbox" style="width:auto" '+(x.featured?'checked':'')+'> Featured</label><br><br><button class="btn" onclick="saveProduct(\''+(x.id||'')+'\')">Save product</button> <button class="btn secondary" onclick="products()">Cancel</button>'+(x.id?' <button class="btn secondary" onclick="deleteProduct(\''+x.id+'\')">Delete</button>':'')+'</div>';}
 async function compressImage(file){
  return new Promise(function(resolve,reject){
   const img=new Image(),url=URL.createObjectURL(file);
@@ -178,10 +178,22 @@ window.saveProduct=async function(id){
    }catch(e){}
    if(!uploaded) urls.push(await compressImage(file));
   }
-  const row={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:Number(document.getElementById('fstock').value||0),description:document.getElementById('fdesc').value,image_urls:urls,status:document.getElementById('fstatus').value,featured:document.getElementById('ffeatured').checked};
-  const r=id?await db.from('products').update(row).eq('id',id):await db.from('products').insert(row);
+  const base={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:Number(document.getElementById('fstock').value||0),description:document.getElementById('fdesc').value,status:document.getElementById('fstatus').value,featured:document.getElementById('ffeatured').checked};
+  let r;
+  if(urls.length){
+    r=id?await db.from('products').update({...base,image_urls:urls}).eq('id',id):await db.from('products').insert({...base,image_urls:urls});
+    if(r.error && /image_urls.*column|column.*image_urls.*schema cache/i.test(r.error.message)){
+      r=id?await db.from('products').update({...base,image_url:urls[0]}).eq('id',id):await db.from('products').insert({...base,image_url:urls[0]});
+    }
+    if(r.error && /image_url.*column|column.*image_url.*schema cache/i.test(r.error.message)){
+      r=id?await db.from('products').update(base).eq('id',id):await db.from('products').insert(base);
+    }
+  }else{
+    r=id?await db.from('products').update(base).eq('id',id):await db.from('products').insert(base);
+  }
   if(r.error)throw r.error;
-  toast('Product saved successfully');products();
+  toast(urls.length?'Product saved successfully':'Product saved successfully. Add an image URL later if your database has an image field.');
+  products();
  }catch(e){toast(e.message||'Could not save product')}
 };
 async function numbers(){
