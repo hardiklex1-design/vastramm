@@ -132,7 +132,7 @@ async function count(t){const {count,error}=await db.from(t).select('*',{count:'
 async function load(p){
  document.getElementById('title').textContent=p[0].toUpperCase()+p.slice(1);
  if(p==='dashboard')return dashboard();
- if(p==='products')return products();
+ if(p==='products'){content.innerHTML='<div class="panel"><h3>Loading Products…</h3><p class="muted">Opening product manager.</p></div>';return renderProducts();}
  if(p==='numbers')return numbers();
  if(p==='media')return media();
  if(p==='homepage')return homepage();
@@ -165,7 +165,7 @@ async function saveProductMeta(id,value){
  const r=await db.from('site_settings').upsert({setting_key:'product_meta_'+id,setting_value:value},{onConflict:'setting_key'});
  if(r.error)throw r.error;
 }
-async function products(){
+async function renderProducts(){
  try{
   const r=await db.from('products').select('*').order('sort_order',{ascending:true});
   if(r.error)throw r.error;
@@ -182,7 +182,7 @@ async function products(){
   content.innerHTML='<div class="panel"><h3>Products</h3><p class="danger">'+esc(e.message||'Could not load products')+'</p><button class="btn" onclick="newProduct()">+ Add product anyway</button></div>';
  }
 }
-window.newProduct=()=>productForm();
+window.products=renderProducts; window.newProduct=()=>productForm();
 window.editProduct=async id=>{
  const r=await db.from('products').select('*').eq('id',id).single();
  if(r.error)return toast(r.error.message);
