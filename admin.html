@@ -247,7 +247,8 @@ function pickProductRow(columns,desired){
 }
 window.saveProduct=async function(id){
  try{
-  const desired={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:Number(document.getElementById('fstock').value||0),description:document.getElementById('fdesc').value};
+  const selectedStatus=document.getElementById('fstatus').value;
+  const desired={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:selectedStatus==='soldout'?0:Number(document.getElementById('fstock').value||0),description:document.getElementById('fdesc').value};
   if(!desired.name)throw new Error('Product name is required.');
   const columns=await productColumns(),row=pickProductRow(columns,desired);
   if(!columns.includes('name'))throw new Error('Your products table is missing the name field.');
@@ -263,7 +264,7 @@ window.saveProduct=async function(id){
   if(manual.length)images=manual;
   const files=Array.from(document.getElementById('fimages').files||[]);
   for(let i=0;i<files.length;i++){images.push(await uploadProductImage(files[i]));}
-  await saveProductMeta(productId,{images:images,status:document.getElementById('fstatus').value,featured:document.getElementById('ffeatured').checked});
+  await saveProductMeta(productId,{images:images,status:selectedStatus,featured:document.getElementById('ffeatured').checked});
   toast('Product saved and published');
   products();
  }catch(e){toast(e.message||'Could not save product')}
