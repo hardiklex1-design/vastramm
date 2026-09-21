@@ -269,21 +269,54 @@ window.saveProduct=async function(id){
  }catch(e){toast(e.message||'Could not save product')}
 };
 async function numbers(){
- const {data,error}=await db.from('numbers').select('*').order('sort_order');
- if(error)return content.innerHTML=`<div class="panel">${error.message}</div>`;
- content.innerHTML=`<div class="panel"><h3>THE NUMBERS</h3>${data.map(x=>`<div class="row"><div><b>${x.label}</b><div class="muted">${x.setting_value}</div></div><button class="btn secondary" onclick="editNumber('${x.id}')">Edit</button></div>`).join('')}</div>`;
+ try{
+  const {data,error}=await db.from('numbers').select('*').order('sort_order',{ascending:true});
+  if(error)throw error;
+  const rows=data||[];
+  content.innerHTML='<div class="panel"><h3>THE NUMBERS</h3>'+
+   (rows.length?rows.map(x=>'<div class="row"><div><b>'+esc(x.label||'')+'</b><div class="muted">'+esc(x.value??'')+'</div></div><button type="button" class="btn secondary edit-number-btn" data-id="'+esc(x.id)+'">Edit</button></div>').join(''):'<p class="muted">No statistics found.</p>')+
+   '</div>';
+  document.querySelectorAll('.edit-number-btn').forEach(btn=>btn.addEventListener('click',()=>editNumber(btn.dataset.id)));
+ }catch(e){
+  content.innerHTML='<div class="panel"><h3>THE NUMBERS</h3><p class="danger">'+esc(e.message||'Could not load numbers')+'</p></div>';
+ }
 }
-window.editNumber=async id=>{let {data}=await db.from('numbers').select('*').eq('id',id).single();content.innerHTML=`<div class="panel"><h3>Edit statistic</h3><label>Label</label><input id="nl" value="${data.label}"><label>Value</label><input id="nv" value="${data.value}"><label>Description</label><input id="nd" value="${data.description||''}"><button class="btn" onclick="saveNumber('${id}')">Save</button> <button class="btn secondary" onclick="numbers()">Cancel</button></div>`};
-window.saveNumber=async id=>{
- const label=document.getElementById('nl')?.value?.trim()||'';
+window.editNumber=async function(id){
+ try{
+  const r=await db.from('numbers').select('*').eq('id',id).single();
+  if(r.error)throw r.error;
+  const data=r.data||{};
+  content.innerHTML='<div class="panel"><h3>Edit statistic</h3>'+
+   '<label>Label</label><input id="nl" value="'+esc(data.label||'')+'">'+
+   '<label>Value</label><input id="nv" value="'+esc(data.value??'')+'">'+
+   '<label>Description</label><input id="nd" value="'+esc(data.description||'')+'">'+
+   '<button type="button" class="btn" id="saveNumberBtn">Save</button> '+
+   '<button type="button" class="btn secondary" id="cancelNumberBtn">Cancel</button>'+
+   '<p id="numberSaveMsg" class="muted"></p></div>';
+  document.getElementById('saveNumberBtn').onclick=()=>saveNumber(id);
+  document.getElementById('cancelNumberBtn').onclick=()=>numbers();
+ }catch(e){toast(e.message||'Could not open statistic')}
+};
+window.saveNumber=async function(id){
+ const label=document.getElementById('nl')?.value.trim()||'';
  const value=document.getElementById('nv')?.value??'';
  const description=document.getElementById('nd')?.value||'';
+ const msg=document.getElementById('numberSaveMsg');
  if(!label){toast('Label is required');return}
- const r=await db.from('numbers').update({label:label,value:String(value),description:description}).eq('id',id).select();
- if(r.error){toast('Could not save: '+r.error.message);return}
- if(!r.data||!r.data.length){toast('Nothing was updated. Please check Numbers permissions in Supabase.');return}
- toast('Number saved successfully');numbers();
+ if(msg)msg.textContent='Saving…';
+ try{
+  const update={label:label,value:String(value),description:description};
+  let r=await db.from('numbers').update(update).eq('id',id).select('*').single();
+  if(r.error)throw r.error;
+  if(msg)msg.textContent='Saved successfully.';
+  toast('Number saved successfully');
+  await numbers();
+ }catch(e){
+  if(msg)msg.textContent='Save failed: '+(e.message||'Unknown error');
+  toast('Save failed: '+(e.message||'Unknown error'));
+ }
 };
+
 async function media(){
  const {data,error}=await db.storage.from('vastramm-media').list('',{limit:100,sortBy:{column:'created_at',order:'desc'}});
  if(error)return content.innerHTML=`<div class="panel">${error.message}</div>`;
