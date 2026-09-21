@@ -64,7 +64,7 @@ function showLogin(){document.getElementById('login').classList.remove('hidden')
 function showApp(){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');load('dashboard')}
 document.getElementById('loginBtn').onclick=async()=>{
  const msg=document.getElementById('loginMsg'); msg.textContent='Signing in...';
- const {error}=await db.auth.signInWithPassword({email:email.value.trim(),password:password.value});
+ const {error}=await db.auth.signInWithPassword({email:document.getElementById("email").value.trim(),password:document.getElementById("password").value});
  if(error){msg.textContent=error.message;return}
  if(!(await adminOK())){await db.auth.signOut();msg.textContent='This account is not a VASTRAMM admin.';return}
  showApp();
