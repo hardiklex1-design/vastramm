@@ -69,8 +69,12 @@ async function directPasswordLogin(email,password){
    let body={}; try{body=JSON.parse(raw)}catch{}
    if(!res.ok) throw new Error((body.error_description||body.msg||body.message||('Authentication failed (HTTP '+res.status+')')));
    if(!body.access_token||!body.refresh_token) throw new Error('Authentication succeeded but Supabase did not return a session.');
-   const sessionResult=await db.auth.setSession({access_token:body.access_token,refresh_token:body.refresh_token});
-   if(sessionResult.error) throw sessionResult.error;
+   // Supabase can occasionally hang while persisting the session during an API incident.
+   // Persist the returned session ourselves so the admin UI can continue without waiting.
+   const projectRef=SUPABASE_URL.replace('https://','').split('.')[0];
+   const storageKey='sb-'+projectRef+'-auth-token';
+   const expiresAt=body.expires_at || Math.floor(Date.now()/1000)+(body.expires_in||3600);
+   localStorage.setItem(storageKey,JSON.stringify({access_token:body.access_token,refresh_token:body.refresh_token,token_type:body.token_type||'bearer',expires_in:body.expires_in||3600,expires_at:expiresAt,user:body.user}));
    return body;
  }catch(e){
    if(e.name==='AbortError') throw new Error('Supabase authentication timed out after 10 seconds.');
