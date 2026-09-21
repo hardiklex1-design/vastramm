@@ -305,16 +305,18 @@ window.saveNumber=async function(id){
  if(!label){toast('Label is required');return}
  if(msg)msg.textContent='Saving…';
  try{
-  const current=await db.from('numbers').select('*').order('sort_order',{ascending:true});
-  if(current.error)throw current.error;
-  const rows=(current.data||[]).map(x=>({id:x.id,label:x.label,value:String(x.value??''),description:x.description||'',sort_order:x.sort_order,visible:x.visible}));
-  const idx=rows.findIndex(x=>String(x.id)===String(id));
-  if(idx<0)throw new Error('Statistic not found.');
-  rows[idx].label=label;rows[idx].value=String(value);rows[idx].description=description;
-  const override=await db.from('site_settings').upsert({setting_key:'numbers_override',setting_value:rows},{onConflict:'setting_key'});
-  if(override.error)throw override.error;
-  await db.from('numbers').update({label:label,value:String(value),description:description}).eq('id',id);
-  toast('Number saved and published');
+  const r=await db.from('numbers').update({label:label,value:String(value),description:description}).eq('id',id).select('*').single();
+  if(r.error)throw r.error;
+  if(!r.data)throw new Error('The number was not updated.');
+  // Also attempt a published override, but never block the real database save if this optional write is unavailable.
+  try{
+   const current=await db.from('numbers').select('*').order('sort_order',{ascending:true});
+   if(!current.error&&Array.isArray(current.data)){
+    await db.from('site_settings').upsert({setting_key:'numbers_override',setting_value:current.data},{onConflict:'setting_key'});
+   }
+  }catch(e){}
+  if(msg)msg.textContent='Saved successfully.';
+  toast('Number saved successfully');
   await numbers();
  }catch(e){
   if(msg)msg.textContent='Save failed: '+(e.message||'Unknown error');
