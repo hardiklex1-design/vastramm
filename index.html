@@ -69,7 +69,7 @@ try{
   const bySku={};products.forEach(x=>{bySku[String(x.sku||'').toUpperCase()]=x});const merged=base.map(b=>bySku[b.sku]||b);
   document.querySelector('.products').innerHTML=merged.map(x=>{
  const m=metaById[String(x.id)]||{},img=Array.isArray(m.images)?m.images[0]:'';
- const style=img?'style="background-image:linear-gradient(135deg,rgba(30,30,30,.25),rgba(5,5,5,.75)),url('+JSON.stringify(img)+');background-size:cover;background-position:center"':'';
+ const safeImg=img?String(img).replace(/\\/g,'\\\\').replace(/"/g,'&quot;'):''; const style=safeImg?"style='background-image:linear-gradient(135deg,rgba(30,30,30,.25),rgba(5,5,5,.75)),url(\""+safeImg+"\");background-size:cover;background-position:center'":'';
  return '<a class="product" href="product.html?sku='+encodeURIComponent(x.sku||'')+'"><div class="pic" '+style+'>'+(!img?esc(x.sku||'VASTRAMM'):'')+'</div><div class="details"><h3>'+esc(x.name)+'</h3><div class="price">₹'+Number(x.price||0).toLocaleString('en-IN')+'</div><span class="pill">'+(m.status==='soldout'?'SOLD OUT':m.featured?'FEATURED':'AVAILABLE')+'</span></div></a>';
 }).join('');
   document.querySelector('#collection .head .muted').textContent='09 / 09 pieces';
