@@ -158,7 +158,32 @@ async function products(){
 window.newProduct=()=>productForm();
 window.editProduct=async id=>{let {data}=await db.from('products').select('*').eq('id',id).single();productForm(data)};
 function productForm(x={}){const imgs=Array.isArray(x.image_urls)?x.image_urls:[];content.innerHTML='<div class="panel"><h3>'+(x.id?'Edit':'Add')+' product</h3><label>SKU</label><input id="fsku" value="'+(x.sku||'')+'"><label>Name</label><input id="fname" value="'+(x.name||'')+'"><label>Slug</label><input id="fslug" value="'+(x.slug||'')+'"><label>Price</label><input id="fprice" type="number" value="'+(x.price||0)+'"><label>Stock</label><input id="fstock" type="number" value="'+(x.stock||0)+'"><label>Status</label><select id="fstatus"><option value="available" '+(x.status==='available'?'selected':'')+'>Available</option><option value="soldout" '+(x.status==='soldout'?'selected':'')+'>Sold out</option></select><label>Description</label><textarea id="fdesc" rows="5">'+(x.description||'')+'</textarea><label>Product images</label><input id="fimages" type="file" multiple accept="image/*"><label>Existing image URLs (one per line)</label><textarea id="furls" rows="4">'+imgs.join('\n')+'</textarea><label><input id="ffeatured" type="checkbox" style="width:auto" '+(x.featured?'checked':'')+'> Featured</label><br><br><button class="btn" onclick="saveProduct(\''+(x.id||'')+'\')">Save product</button> <button class="btn secondary" onclick="products()">Cancel</button>'+(x.id?' <button class="btn secondary" onclick="deleteProduct(\''+x.id+'\')">Delete</button>':'')+'</div>';}
-window.saveProduct=async function(id){try{let urls=document.getElementById('furls').value.split('\n').map(function(x){return x.trim()}).filter(Boolean);const files=Array.from(document.getElementById('fimages').files||[]);for(const file of files){const path='products/'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'-');const up=await db.storage.from('vastramm-media').upload(path,file,{upsert:false});if(up.error)throw up.error;urls.push(db.storage.from('vastramm-media').getPublicUrl(path).data.publicUrl)}const row={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:Number(document.getElementById('fstock').value||0),description:document.getElementById('fdesc').value,image_urls:urls,status:document.getElementById('fstatus').value,featured:document.getElementById('ffeatured').checked};const r=id?await db.from('products').update(row).eq('id',id):await db.from('products').insert(row);if(r.error)throw r.error;toast('Product saved');products()}catch(e){toast(e.message||'Could not save product')}};
+async function compressImage(file){
+ return new Promise(function(resolve,reject){
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=function(){const max=1600,s=Math.min(1,max/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*s)),h=Math.max(1,Math.round(img.height*s));const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);resolve(cv.toDataURL('image/jpeg',0.82))};
+  img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('Could not read image: '+file.name))};img.src=url;
+ });
+}
+window.saveProduct=async function(id){
+ try{
+  let urls=document.getElementById('furls').value.split('\n').map(function(x){return x.trim()}).filter(Boolean);
+  const files=Array.from(document.getElementById('fimages').files||[]);
+  for(const file of files){
+   let uploaded=false;
+   try{
+    const path='products/'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'-');
+    const up=await db.storage.from('vastramm-media').upload(path,file,{upsert:false});
+    if(!up.error){urls.push(db.storage.from('vastramm-media').getPublicUrl(path).data.publicUrl);uploaded=true}
+   }catch(e){}
+   if(!uploaded) urls.push(await compressImage(file));
+  }
+  const row={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:Number(document.getElementById('fstock').value||0),description:document.getElementById('fdesc').value,image_urls:urls,status:document.getElementById('fstatus').value,featured:document.getElementById('ffeatured').checked};
+  const r=id?await db.from('products').update(row).eq('id',id):await db.from('products').insert(row);
+  if(r.error)throw r.error;
+  toast('Product saved successfully');products();
+ }catch(e){toast(e.message||'Could not save product')}
+};
 async function numbers(){
  const {data,error}=await db.from('numbers').select('*').order('sort_order');
  if(error)return content.innerHTML=`<div class="panel">${error.message}</div>`;
