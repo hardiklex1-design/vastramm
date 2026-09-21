@@ -1,17 +1,35 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cart — VASTRAMM</title><style>
-*{box-sizing:border-box}body{margin:0;background:#080808;color:#f5f5f2;font-family:Arial,sans-serif;position:relative;overflow-x:hidden}.brand-watermark{position:fixed;inset:0;display:grid;place-items:center;font-size:clamp(90px,18vw,280px);font-weight:900;letter-spacing:-12px;color:rgba(255,255,255,.025);pointer-events:none;z-index:0;transform:rotate(-8deg)}.wrap{position:relative;z-index:1;max-width:1000px;margin:auto;padding:30px}.nav{display:flex;justify-content:space-between;border-bottom:1px solid #292929;padding-bottom:20px;letter-spacing:3px;font-weight:900}.nav a{color:#fff;text-decoration:none}.panel{border:1px solid #292929;background:#111;padding:22px;margin-top:30px}.item{display:grid;grid-template-columns:90px 1fr auto;gap:18px;align-items:center;padding:16px 0;border-bottom:1px solid #292929}.item img{width:90px;height:90px;object-fit:cover;background:#171717}.muted{color:#888}.qty{width:70px;background:#0b0b0b;color:#fff;border:1px solid #444;padding:9px}.btn{display:inline-block;background:#fff;color:#000;padding:14px 20px;border:0;font-weight:800;text-decoration:none;margin-top:20px;cursor:pointer}.danger{background:#222;color:#fff;border:1px solid #444}.total{font-size:25px;text-align:right;margin-top:20px}@media(max-width:650px){.wrap{padding:18px}.item{grid-template-columns:65px 1fr}.item img{width:65px;height:65px}.item .right{grid-column:2}}
-</style></head><body><div class="brand-watermark">VASTRAMM</div><div class="wrap"><nav class="nav"><a href="index.html">VASTRAMM</a><a href="index.html#collection">SHOP</a></nav><main id="app"></main></div><script>
-function getCart(){try{const c=JSON.parse(localStorage.getItem("vastramm_cart")||"[]");return Array.isArray(c)?c:[]}catch(e){return[]}}
-function saveCart(c){localStorage.setItem("vastramm_cart",JSON.stringify(c));render()}
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function money(n){return Number(n||0).toLocaleString("en-IN")}
-function render(){
- const c=getCart(),app=document.getElementById("app");
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cart — VASTRAMM</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#080808;color:#f5f5f2;font-family:Arial,sans-serif;overflow-x:hidden}
+.brand-watermark{position:fixed;inset:0;display:grid;place-items:center;font-size:clamp(90px,18vw,280px);font-weight:900;letter-spacing:-12px;color:rgba(255,255,255,.025);pointer-events:none;z-index:0;transform:rotate(-8deg)}
+.wrap{position:relative;z-index:1;max-width:1000px;margin:auto;padding:30px}.nav{display:flex;justify-content:space-between;border-bottom:1px solid #292929;padding-bottom:20px;letter-spacing:3px;font-weight:900}.nav a{color:#fff;text-decoration:none}
+.panel{border:1px solid #292929;background:#111;padding:22px;margin-top:30px}.item{display:grid;grid-template-columns:90px 1fr auto;gap:18px;align-items:center;padding:16px 0;border-bottom:1px solid #292929}.item img{width:90px;height:90px;object-fit:cover;background:#171717}.muted{color:#888}.qty{width:70px;background:#0b0b0b;color:#fff;border:1px solid #444;padding:9px}.btn{display:inline-block;background:#fff;color:#000;padding:14px 20px;border:0;font-weight:800;text-decoration:none;margin-top:20px;cursor:pointer}.danger{background:#222;color:#fff;border:1px solid #444}.total{font-size:25px;text-align:right;margin-top:20px}
+@media(max-width:650px){.wrap{padding:18px}.item{grid-template-columns:65px 1fr}.item img{width:65px;height:65px}.item .right{grid-column:2}}
+</style></head>
+<body><div class="brand-watermark">VASTRAMM</div><div class="wrap"><nav class="nav"><a href="index.html">VASTRAMM</a><a href="index.html#collection">SHOP</a></nav>
+<main id="app"><div class="panel"><h1>YOUR CART IS EMPTY.</h1><p class="muted">Add a piece from the collection to continue.</p><a class="btn" href="index.html#collection">SHOP COLLECTION</a></div></main></div>
+<script>
+(function(){
+function readCart(){try{var c=JSON.parse(localStorage.getItem("vastramm_cart")||"[]");return Array.isArray(c)?c:[]}catch(e){return[]}}
+function writeCart(c){localStorage.setItem("vastramm_cart",JSON.stringify(c));draw()}
+function safe(v){return String(v==null?"":v).replace(/[&<>"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]})}
+function money(v){return Number(v||0).toLocaleString("en-IN")}
+function draw(){
+ var app=document.getElementById("app"),c=readCart();
+ if(!app)return;
  if(!c.length){app.innerHTML='<div class="panel"><h1>YOUR CART IS EMPTY.</h1><p class="muted">Add a piece from the collection to continue.</p><a class="btn" href="index.html#collection">SHOP COLLECTION</a></div>';return}
- let total=0;
- app.innerHTML='<div class="panel"><h1>YOUR CART</h1>'+c.map((x,i)=>{const price=Number(x.price||0),qty=Math.max(1,Number(x.qty)||1);total+=price*qty;return '<div class="item"><div>'+((x.image)?'<img src="'+esc(x.image)+'" alt="">':'<div style="width:90px;height:90px;background:#171717;display:grid;place-items:center;color:#777;font-size:9px">VASTRAMM</div>')+'</div><div><b>'+esc(x.name||x.sku||"PRODUCT")+'</b><div class="muted">₹'+money(price)+'</div><div class="muted">'+esc(x.sku||"")+'</div></div><div class="right"><input class="qty" type="number" min="1" value="'+qty+'" onchange="changeItem('+i+',this.value)"> <button class="btn danger" style="margin-top:0;padding:9px 12px" onclick="removeItem('+i+')">REMOVE</button></div></div>'}).join('')+'<div class="total">TOTAL — ₹'+money(total)+'</div><div style="text-align:right"><a class="btn" href="checkout.html">CHECKOUT</a></div></div>'
+ var total=0,html='<div class="panel"><h1>YOUR CART</h1>';
+ c.forEach(function(x,i){
+   var price=Number(x.price||0),qty=Math.max(1,Number(x.qty)||1);total+=price*qty;
+   var image=x.image?'<img src="'+safe(x.image)+'" alt="">':'<div style="width:90px;height:90px;background:#171717;display:grid;place-items:center;color:#777;font-size:9px">VASTRAMM</div>';
+   html+='<div class="item"><div>'+image+'</div><div><b>'+safe(x.name||x.sku||"PRODUCT")+'</b><div class="muted">₹'+money(price)+'</div><div class="muted">'+safe(x.sku||"")+'</div></div><div class="right"><input class="qty" type="number" min="1" value="'+qty+'" data-i="'+i+'"> <button class="btn danger remove" data-i="'+i+'" style="margin-top:0;padding:9px 12px">REMOVE</button></div></div>';
+ });
+ html+='<div class="total">TOTAL — ₹'+money(total)+'</div><div style="text-align:right"><a class="btn" href="checkout.html">CHECKOUT</a></div></div>';
+ app.innerHTML=html;
+ app.querySelectorAll(".qty").forEach(function(el){el.addEventListener("change",function(){var a=readCart(),i=Number(el.getAttribute("data-i"));if(a[i]){a[i].qty=Math.max(1,Number(el.value)||1);writeCart(a)}})});
+ app.querySelectorAll(".remove").forEach(function(el){el.addEventListener("click",function(){var a=readCart(),i=Number(el.getAttribute("data-i"));a.splice(i,1);writeCart(a)})});
 }
-function changeItem(i,v){const c=getCart();if(!c[i])return;c[i].qty=Math.max(1,Number(v)||1);saveCart(c)}
-function removeItem(i){const c=getCart();c.splice(i,1);saveCart(c)}
-render();
+draw();
+})();
 </script></body></html>
