@@ -176,7 +176,7 @@ async function renderProducts(){
    if(!mr.error)(mr.data||[]).forEach(function(x){metas[String(x.setting_key).replace('product_meta_','')]=x.setting_value||{}});
   }catch(e){}
   content.innerHTML='<div class="panel"><div class="top"><h3>Products</h3><button class="btn" onclick="newProduct()">+ Add product</button></div>'+
-   (data.length?data.map(function(x){const m=metas[String(x.id)]||{};return '<div class="row"><div><b>'+esc(x.name||'Untitled')+'</b><div class="muted">'+esc(x.sku||'')+' · ₹'+Number(x.price||0).toLocaleString('en-IN')+' · '+Number(x.stock||0)+' stock · '+(Array.isArray(m.images)?m.images.length:0)+' images · '+esc(m.status||'available')+(m.featured?' · FEATURED':'')+'</div></div><button class="btn secondary" onclick="editProduct(\\''+x.id+'\\')">Edit</button></div>'}).join(''):'<p class="muted">No products yet. Click + Add product to create your first one.</p>')+
+   (data.length?data.map(function(x){const m=metas[String(x.id)]||{};return '<div class="row"><div><b>'+esc(x.name||'Untitled')+'</b><div class="muted">'+esc(x.sku||'')+' · ₹'+Number(x.price||0).toLocaleString('en-IN')+' · '+Number(x.stock||0)+' stock · '+(Array.isArray(m.images)?m.images.length:0)+' images · '+esc(m.status||'available')+(m.featured?' · FEATURED':'')+'</div></div><button class="btn secondary" onclick="editProduct(\''+x.id+'\')">Edit</button></div>'}).join(''):'<p class="muted">No products yet. Click + Add product to create your first one.</p>')+
    '</div>';
  }catch(e){
   content.innerHTML='<div class="panel"><h3>Products</h3><p class="danger">'+esc(e.message||'Could not load products')+'</p><button class="btn" onclick="newProduct()">+ Add product anyway</button></div>';
