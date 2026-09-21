@@ -11,6 +11,10 @@ async function render(){
   if(x.status==="soldout"){sold.push(x.name);continue}
   if(x.id){
    try{
+    const pr=await db.from("products").select("stock").eq("id",x.id).maybeSingle();
+    if(!pr.error&&pr.data&&Number(pr.data.stock||0)<=0)sold.push(x.name);
+   }catch(e){}
+   try{
     const mr=await db.from("site_settings").select("setting_value").eq("setting_key","product_meta_"+x.id).maybeSingle();
     if(!mr.error&&mr.data?.setting_value?.status==="soldout")sold.push(x.name);
    }catch(e){}
