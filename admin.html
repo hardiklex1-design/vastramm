@@ -69,6 +69,7 @@ const SUPABASE_KEY="sb_publishable_GlX_WAPD7MApMRMGGVvMxA_2NtPC_y9";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const content=document.getElementById('content');
+const esc=(v)=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const toast=(m)=>{let t=document.getElementById('toast');t.textContent=m;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),2200)};
 async function adminOK(){
  const {data:{user},error}=await db.auth.getUser();
