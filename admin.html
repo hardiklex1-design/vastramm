@@ -55,24 +55,50 @@ async function adminOK(){
  if(error||!user)return false;
  return String(user.email||'').toLowerCase()==='hardiklex1@gmail.com';
 }
-async function signInWithTimeout(email,password){
- const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('The login request was blocked or timed out. Turn OFF Brave Shields for vastramm.co.in, then try again.')),8000));
- return Promise.race([db.auth.signInWithPassword({email,password}),timeout]);
+async function directPasswordLogin(email,password){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),10000);
+ try{
+   const res=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{
+     method:'POST',
+     headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+     body:JSON.stringify({email,password}),
+     signal:controller.signal
+   });
+   const raw=await res.text();
+   let body={}; try{body=JSON.parse(raw)}catch{}
+   if(!res.ok) throw new Error((body.error_description||body.msg||body.message||('Authentication failed (HTTP '+res.status+')')));
+   if(!body.access_token||!body.refresh_token) throw new Error('Authentication succeeded but Supabase did not return a session.');
+   const sessionResult=await db.auth.setSession({access_token:body.access_token,refresh_token:body.refresh_token});
+   if(sessionResult.error) throw sessionResult.error;
+   return body;
+ }catch(e){
+   if(e.name==='AbortError') throw new Error('Supabase authentication timed out after 10 seconds.');
+   throw e;
+ }finally{clearTimeout(timer)}
 }
 async function boot(){
- const {data:{session}}=await db.auth.getSession();
- if(session && await adminOK()) showApp(); else showLogin();
+ try{
+   const {data:{session}}=await db.auth.getSession();
+   if(session && String(session.user?.email||'').toLowerCase()==='hardiklex1@gmail.com') showApp(); else showLogin();
+ }catch(e){showLogin()}
 }
 function showLogin(){document.getElementById('login').classList.remove('hidden');document.getElementById('app').classList.add('hidden')}
 function showApp(){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');load('dashboard')}
 document.getElementById('loginBtn').onclick=async()=>{
- const msg=document.getElementById('loginMsg'); const help=document.getElementById('loginHelp'); msg.textContent='Signing in...'; help.textContent='Connecting securely to VASTRAMM authentication…';
+ const msg=document.getElementById('loginMsg'); const help=document.getElementById('loginHelp');
+ const email=document.getElementById('email').value.trim(); const password=document.getElementById('password').value;
+ msg.textContent='Signing in…'; help.textContent='Using direct Supabase authentication…';
  try{
- const {error}=await signInWithTimeout(document.getElementById("email").value.trim(),document.getElementById("password").value);
- if(error){msg.textContent=error.message;return}
- if(!(await adminOK())){await db.auth.signOut();msg.textContent='This account is not a VASTRAMM admin.';return}
- showApp();
-}catch(e){msg.textContent=e.message||'Unable to sign in. Please try again.'; help.textContent='If you use Brave, click the lion icon near the address bar and turn Shields OFF for this site, then reload.';}
+   const body=await directPasswordLogin(email,password);
+   if(String(body.user?.email||email).toLowerCase()!=='hardiklex1@gmail.com'){
+     await db.auth.signOut(); msg.textContent='This account is not a VASTRAMM admin.'; return;
+   }
+   msg.textContent='Signed in.'; help.textContent='Loading your admin panel…'; showApp();
+ }catch(e){
+   msg.textContent=e.message||'Unable to sign in.';
+   help.textContent='This message is the exact authentication error; no more browser setting changes are needed.';
+ }
 };
 document.getElementById('logout').onclick=async()=>{await db.auth.signOut();showLogin()};
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');load(b.dataset.page)});
