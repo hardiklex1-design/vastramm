@@ -51,10 +51,13 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const content=document.getElementById('content');
 const toast=(m)=>{let t=document.getElementById('toast');t.textContent=m;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),2200)};
 async function adminOK(){
- const {data:{user}}=await db.auth.getUser();
- if(!user)return false;
- const {data}=await db.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();
- return !!data;
+ const {data:{user},error}=await db.auth.getUser();
+ if(error||!user)return false;
+ return String(user.email||'').toLowerCase()==='hardiklex1@gmail.com';
+}
+async function signInWithTimeout(email,password){
+ const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Supabase sign-in timed out. Please refresh and try again.')),12000));
+ return Promise.race([db.auth.signInWithPassword({email,password}),timeout]);
 }
 async function boot(){
  const {data:{session}}=await db.auth.getSession();
@@ -64,10 +67,12 @@ function showLogin(){document.getElementById('login').classList.remove('hidden')
 function showApp(){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');load('dashboard')}
 document.getElementById('loginBtn').onclick=async()=>{
  const msg=document.getElementById('loginMsg'); msg.textContent='Signing in...';
- const {error}=await db.auth.signInWithPassword({email:document.getElementById("email").value.trim(),password:document.getElementById("password").value});
+ try{
+ const {error}=await signInWithTimeout(document.getElementById("email").value.trim(),document.getElementById("password").value);
  if(error){msg.textContent=error.message;return}
  if(!(await adminOK())){await db.auth.signOut();msg.textContent='This account is not a VASTRAMM admin.';return}
  showApp();
+}catch(e){msg.textContent=e.message||'Unable to sign in. Please try again.';}
 };
 document.getElementById('logout').onclick=async()=>{await db.auth.signOut();showLogin()};
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');load(b.dataset.page)});
