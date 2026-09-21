@@ -87,8 +87,8 @@ async function boot(){
    if(session && String(session.user?.email||'').toLowerCase()==='hardiklex1@gmail.com') showApp(); else showLogin();
  }catch(e){showLogin()}
 }
-function showLogin(){document.getElementById('login').classList.remove('hidden');document.getElementById('app').classList.add('hidden')}
-function showApp(){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');load('dashboard')}
+function showLogin(){const l=document.getElementById('login'),a=document.getElementById('app');l.classList.remove('hidden');l.style.display='grid';a.classList.add('hidden');a.style.display='none'}
+function showApp(){const l=document.getElementById('login'),a=document.getElementById('app');l.classList.add('hidden');l.style.display='none';a.classList.remove('hidden');a.style.display='flex';document.getElementById('title').textContent='Dashboard';dashboard().catch(e=>{content.innerHTML='<div class="panel"><h3>VASTRAMM Admin</h3><p class="muted">Signed in. Dashboard data is temporarily unavailable.</p></div>'})}
 document.getElementById('loginBtn').onclick=async()=>{
  const msg=document.getElementById('loginMsg'); const help=document.getElementById('loginHelp');
  const email=document.getElementById('email').value.trim(); const password=document.getElementById('password').value;
