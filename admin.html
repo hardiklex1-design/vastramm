@@ -165,9 +165,22 @@ async function compressImage(file){
   img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('Could not read image: '+file.name))};img.src=url;
  });
 }
+async function saveProductRow(id,row){
+ let current={...row};
+ for(let attempt=0;attempt<12;attempt++){
+  const r=id?await db.from('products').update(current).eq('id',id):await db.from('products').insert(current);
+  if(!r.error)return r;
+  const m=String(r.error.message||'');
+  const match=m.match(/Could not find the '([^']+)' column of 'products'|column ['"]?([^'"\\s]+)['"]? of ['"]?products['"]? does not exist/i);
+  const bad=(match&&(match[1]||match[2]))||null;
+  if(!bad || !(bad in current)) throw r.error;
+  delete current[bad];
+ }
+ throw new Error('Could not save product: too many unsupported fields in the products table.');
+}
 window.saveProduct=async function(id){
  try{
-  let urls=document.getElementById('furls').value.split('\n').map(function(x){return x.trim()}).filter(Boolean);
+  let urls=document.getElementById('furls').value.split('\\n').map(function(x){return x.trim()}).filter(Boolean);
   const files=Array.from(document.getElementById('fimages').files||[]);
   for(const file of files){
    let uploaded=false;
@@ -178,23 +191,11 @@ window.saveProduct=async function(id){
    }catch(e){}
    if(!uploaded) urls.push(await compressImage(file));
   }
-  const base={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:Number(document.getElementById('fstock').value||0),description:document.getElementById('fdesc').value,status:document.getElementById('fstatus').value,featured:document.getElementById('ffeatured').checked};
-  let r;
-  if(urls.length){
-    r=id?await db.from('products').update({...base,image_urls:urls}).eq('id',id):await db.from('products').insert({...base,image_urls:urls});
-    if(r.error && /image_urls.*column|column.*image_urls.*schema cache/i.test(r.error.message)){
-      r=id?await db.from('products').update({...base,image_url:urls[0]}).eq('id',id):await db.from('products').insert({...base,image_url:urls[0]});
-    }
-    if(r.error && /image_url.*column|column.*image_url.*schema cache/i.test(r.error.message)){
-      r=id?await db.from('products').update(base).eq('id',id):await db.from('products').insert(base);
-    }
-  }else{
-    r=id?await db.from('products').update(base).eq('id',id):await db.from('products').insert(base);
-  }
-  if(r.error)throw r.error;
-  toast(urls.length?'Product saved successfully':'Product saved successfully. Add an image URL later if your database has an image field.');
-  products();
- }catch(e){toast(e.message||'Could not save product')}
+  const row={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:Number(document.getElementById('fstock').value||0),description:document.getElementById('fdesc').value,status:document.getElementById('fstatus').value,featured:document.getElementById('ffeatured').checked};
+  if(urls.length){row.image_urls=urls;row.image_url=urls[0]}
+  await saveProductRow(id,row);
+  toast('Product saved successfully');products();
+}catch(e){toast(e.message||'Could not save product')}
 };
 async function numbers(){
  const {data,error}=await db.from('numbers').select('*').order('sort_order');
