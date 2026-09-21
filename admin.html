@@ -34,7 +34,7 @@ input,textarea,select{width:100%;background:#0d0d0d;color:#fff;border:1px solid 
     <button data-page="collections">Collections</button>
     <button data-page="pages">Pages</button>
     <button data-page="media">Media</button>
-    <button data-page="orders">Orders</button>
+    <button data-page="orders">Orders</button><button data-page="homepage">Homepage</button><button data-page="navigation">Navigation</button><button data-page="settings">Settings</button>
   </div></aside>
   <main class="main">
     <div class="top"><div><h2 id="title">Dashboard</h2><span class="muted">Connected to Supabase</span></div><button class="btn secondary" id="logout">Sign out</button></div>
@@ -114,6 +114,9 @@ async function load(p){
  if(p==='products')return products();
  if(p==='numbers')return numbers();
  if(p==='media')return media();
+ if(p==='homepage')return homepage();
+ if(p==='navigation')return navigation();
+ if(p==='settings')return settings();
  return simple(p);
 }
 async function dashboard(){
@@ -160,6 +163,40 @@ async function media(){
 }
 window.uploadMedia=async()=>{let files=[...file.files];if(!files.length)return toast('Choose images first');for(const f of files){let path=Date.now()+'-'+f.name.replace(/[^a-zA-Z0-9._-]/g,'-');let r=await db.storage.from('vastramm-media').upload(path,f,{upsert:false});if(r.error)return toast(r.error.message);let u=db.storage.from('vastramm-media').getPublicUrl(path).data.publicUrl;await db.from('media').insert({file_name:f.name,file_url:u,file_type:f.type,file_size:f.size})}toast('Images uploaded');media()};
 async function simple(p){let table=p==='collections'?'collections':p;let {data,error}=await db.from(table).select('*').limit(100);content.innerHTML=`<div class="panel"><h3>${p[0].toUpperCase()+p.slice(1)}</h3>${error?error.message:(data.length?data.map(x=>`<div class="row"><b>${x.name||x.title||x.order_number||x.label||x.setting_key||x.slug||x.id}</b><span class="muted">${x.created_at?new Date(x.created_at).toLocaleDateString():''}</span></div>`).join(''):'No records yet.')}</div>`}
+
+async function homepage(){
+ const r=await db.from('site_settings').select('*').eq('key','homepage').maybeSingle();
+ const v=r.data&&r.data.value?r.data.value:{};
+ content.innerHTML='<div class="panel"><h3>Homepage Editor</h3><label>Hero heading</label><textarea id="hh" rows="3">'+(v.hero_heading||'WEAR\\nTHE\\nVOID.')+'</textarea><label>Hero description</label><textarea id="hd" rows="3">'+(v.hero_description||'')+'</textarea><label>CTA label</label><input id="hc" value="'+(v.cta_label||'Explore collection')+'"><label>CTA URL</label><input id="hu" value="'+(v.cta_url||'#collection')+'"><label>Hero image URL</label><input id="hi" value="'+(v.hero_image||'')+'"><label>Atelier title</label><textarea id="st" rows="2">'+(v.story_title||'MADE IN INDIA.\\nBUILT DIFFERENT.')+'</textarea><label>Atelier description</label><textarea id="sd" rows="4">'+(v.story_description||'')+'</textarea><button class="btn" onclick="saveHomepage()">Save homepage</button></div>';
+}
+window.saveHomepage=async function(){
+ const value={hero_heading:document.getElementById('hh').value,hero_description:document.getElementById('hd').value,cta_label:document.getElementById('hc').value,cta_url:document.getElementById('hu').value,hero_image:document.getElementById('hi').value,story_title:document.getElementById('st').value,story_description:document.getElementById('sd').value};
+ const r=await db.from('site_settings').upsert({key:'homepage',value:value},{onConflict:'key'});
+ if(r.error)toast(r.error.message);else toast('Homepage saved');
+};
+async function navigation(){
+ const r=await db.from('navigation').select('*').order('sort_order');
+ if(r.error)return content.innerHTML='<div class="panel">'+r.error.message+'</div>';
+ content.innerHTML='<div class="panel"><div class="top"><h3>Navigation</h3><button class="btn" onclick="editNav()">+ Add link</button></div>'+(r.data||[]).map(function(x){return '<div class="row"><div><b>'+x.label+'</b><div class="muted">'+x.url+'</div></div><div><button class="btn secondary" onclick="editNav(\''+x.id+'\')">Edit</button> <button class="btn secondary" onclick="deleteNav(\''+x.id+'\')">Delete</button></div></div>'}).join('')+'</div>';
+}
+window.editNav=async function(id){
+ const x=id?(await db.from('navigation').select('*').eq('id',id).single()).data:{};
+ content.innerHTML='<div class="panel"><h3>Navigation link</h3><label>Label</label><input id="nlabel" value="'+(x.label||'')+'"><label>URL</label><input id="nurl" value="'+(x.url||'')+'"><label>Order</label><input id="norder" type="number" value="'+(x.sort_order||0)+'"><label><input id="nvis" type="checkbox" style="width:auto" '+(x.visible!==false?'checked':'')+'> Visible</label><br><br><button class="btn" onclick="saveNav(\''+(id||'')+'\')">Save</button> <button class="btn secondary" onclick="navigation()">Cancel</button></div>';
+};
+window.saveNav=async function(id){
+ const row={label:document.getElementById('nlabel').value,url:document.getElementById('nurl').value,sort_order:Number(document.getElementById('norder').value||0),visible:document.getElementById('nvis').checked};
+ const r=id?await db.from('navigation').update(row).eq('id',id):await db.from('navigation').insert(row);
+ if(r.error)toast(r.error.message);else{toast('Navigation saved');navigation()}
+};
+window.deleteNav=async function(id){if(!confirm('Delete this link?'))return;const r=await db.from('navigation').delete().eq('id',id);if(r.error)toast(r.error.message);else navigation()};
+async function settings(){
+ const r=await db.from('site_settings').select('*').order('key');
+ content.innerHTML='<div class="panel"><h3>Store Settings</h3><label>Key</label><input id="sk"><label>Value</label><textarea id="sv" rows="5"></textarea><button class="btn" onclick="saveSetting()">Save</button></div><div class="panel"><h3>Existing settings</h3>'+(r.data||[]).map(function(x){return '<div class="row"><div><b>'+x.key+'</b><div class="muted">'+JSON.stringify(x.value)+'</div></div><button class="btn secondary" onclick="loadSetting(\''+x.key.replace(/'/g,"\\'")+'\')">Edit</button></div>'}).join('')+'</div>';
+}
+window.loadSetting=async function(key){const r=await db.from('site_settings').select('*').eq('key',key).single();if(r.data){document.getElementById('sk').value=r.data.key;document.getElementById('sv').value=typeof r.data.value==='string'?r.data.value:JSON.stringify(r.data.value,null,2)}};
+window.saveSetting=async function(){let v=document.getElementById('sv').value;try{v=JSON.parse(v)}catch(e){}const r=await db.from('site_settings').upsert({key:document.getElementById('sk').value.trim(),value:v},{onConflict:'key'});if(r.error)toast(r.error.message);else{toast('Setting saved');settings()}};
+window.deleteProduct=async function(id){if(!confirm('Delete this product?'))return;const r=await db.from('products').delete().eq('id',id);if(r.error)toast(r.error.message);else{toast('Product deleted');products()}};
+
 boot();
 </script>
 </body>
