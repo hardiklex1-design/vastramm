@@ -67,7 +67,11 @@ try{
  if(Array.isArray(products)&&products.length){
   const base=[{sku:'V-01',name:'PHANTOM SHELL',price:8900},{sku:'V-02',name:'ZERO HOOD',price:5400},{sku:'V-03',name:'VOID TROUSER',price:6200},{sku:'V-04',name:'NOIR OVERSHIRT',price:7800},{sku:'V-05',name:'ATELIER TEE',price:3200},{sku:'V-06',name:'VANTA CARGO',price:6900},{sku:'V-07',name:'MONOLITH JACKET',price:11900},{sku:'V-08',name:'ECLIPSE SHIRT',price:5900},{sku:'V-09',name:'ARCHIVE HOODIE',price:6400}];
   const bySku={};products.forEach(x=>{bySku[String(x.sku||'').toUpperCase()]=x});const merged=base.map(b=>bySku[b.sku]||b);
-  document.querySelector('.products').innerHTML=merged.map(x=>{const m=metaById[String(x.id)]||{};const img=Array.isArray(m.images)?m.images[0]:'';return '<a class="product" href="product.html?sku='+encodeURIComponent(x.sku||'')+'"><div class="pic" '+(img?'style="background-image:linear-gradient(135deg,rgba(30,30,30,.25),rgba(5,5,5,.75)),url(\\''+esc(img)+'\\');background-size:cover;background-position:center"':'')+'>'+(!img?esc(x.sku||'VASTRAMM'):'')+'</div><div class="details"><h3>'+esc(x.name)+'</h3><div class="price">₹'+Number(x.price||0).toLocaleString('en-IN')+'</div><span class="pill">'+(m.status==='soldout'?'SOLD OUT':m.featured?'FEATURED':'AVAILABLE')+'</span></div></a>'}).join('');
+  document.querySelector('.products').innerHTML=merged.map(x=>{
+ const m=metaById[String(x.id)]||{},img=Array.isArray(m.images)?m.images[0]:'';
+ const style=img?'style="background-image:linear-gradient(135deg,rgba(30,30,30,.25),rgba(5,5,5,.75)),url('+JSON.stringify(img)+');background-size:cover;background-position:center"':'';
+ return '<a class="product" href="product.html?sku='+encodeURIComponent(x.sku||'')+'"><div class="pic" '+style+'>'+(!img?esc(x.sku||'VASTRAMM'):'')+'</div><div class="details"><h3>'+esc(x.name)+'</h3><div class="price">₹'+Number(x.price||0).toLocaleString('en-IN')+'</div><span class="pill">'+(m.status==='soldout'?'SOLD OUT':m.featured?'FEATURED':'AVAILABLE')+'</span></div></a>';
+}).join('');
   document.querySelector('#collection .head .muted').textContent='09 / 09 pieces';
  }
  const liveNumbers=(numbersOverride&&Array.isArray(numbersOverride.setting_value))?numbersOverride.setting_value:numbers;
