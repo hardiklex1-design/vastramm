@@ -337,15 +337,22 @@ async function simple(p){
  if(p!=='orders')return content.innerHTML='<div class="panel"><h3>'+esc(p[0].toUpperCase()+p.slice(1))+'</h3>'+ (error?'<p class="danger">'+esc(error.message)+'</p>':(data&&data.length?data.map(x=>'<div class="row"><b>'+esc(x.name||x.title||x.label||x.setting_key||x.slug||x.id)+'</b><span class="muted">'+(x.created_at?new Date(x.created_at).toLocaleDateString():'')+'</span></div>').join(''):'<p class="muted">No records yet.</p>'))+'</div>';
  if(error)return content.innerHTML='<div class="panel"><h3>Orders</h3><p class="danger">'+esc(error.message)+'</p></div>';
  const statuses=['ORDER PLACED','CONFIRMED','PACKED','SHIPPED','OUT FOR DELIVERY','DELIVERED','CANCELLED'];
- content.innerHTML='<div class="panel"><h3>Orders</h3>'+(data&&data.length?data.map(x=>'<div class="row" style="display:block"><div><b>'+esc(x.order_number||x.id)+'</b></div><div class="muted">'+esc(x.customer_name||x.name||x.email||'Customer')+' · ₹'+Number(x.total||0).toLocaleString('en-IN')+'</div><select onchange="updateOrderStatus(\''+x.id+'\',this.value)">'+statuses.map(v=>'<option '+(String(x.tracking_status||x.status||'ORDER PLACED')===v?'selected':'')+'>'+v+'</option>').join('')+'</select></div>').join(''):'<p class="muted">No orders yet.</p>')+'</div>';
+ const orderRows=await Promise.all((data||[]).map(async function(x){
+   let meta={};
+   try{const mr=await db.from('site_settings').select('setting_value').eq('setting_key','order_meta_'+x.id).maybeSingle();if(!mr.error&&mr.data?.setting_value)meta=mr.data.setting_value}catch(e){}
+   return {x:x,status:meta.tracking_status||'ORDER PLACED'};
+ }));
+ content.innerHTML='<div class="panel"><h3>Orders</h3>'+(orderRows.length?orderRows.map(function(o){const x=o.x;return '<div class="row" style="display:block"><div><b>'+esc(x.order_number||x.id)+'</b></div><div class="muted">'+esc(x.customer_name||x.name||x.email||'Customer')+' · ₹'+Number(x.total||0).toLocaleString('en-IN')+'</div><select onchange="updateOrderStatus(\''+x.id+'\',this.value)">'+statuses.map(v=>'<option '+(o.status===v?'selected':'')+'>'+v+'</option>').join('')+'</select></div>'}).join(''):'<p class="muted">No orders yet.</p>')+'</div>';
 }
 window.updateOrderStatus=async function(id,status){
- // The orders table does not have a "status" column in this schema.
- // Use tracking_status only so order updates cannot fail on a missing column.
- const r=await db.from('orders').update({tracking_status:status}).eq('id',id);
- if(r.error)toast('Order status could not be updated: '+r.error.message);
- else toast('Order status updated');
+ try{
+  const r=await db.from('site_settings').upsert({setting_key:'order_meta_'+id,setting_value:{tracking_status:status}},{onConflict:'setting_key'});
+  if(r.error)throw r.error;
+  toast('Order status updated');
+  await simple('orders');
+ }catch(e){toast('Order status could not be updated: '+(e.message||'Unknown error'))}
 };
+
 async function homepage(){
  const r=await db.from('site_settings').select('*').eq('setting_key','homepage').maybeSingle();
  const v=r.data&&r.data.setting_value?r.data.setting_value:{};
