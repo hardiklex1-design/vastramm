@@ -157,12 +157,12 @@ async function productColumns(){
  return r.data&&r.data[0]?Object.keys(r.data[0]):[];
 }
 async function getProductMeta(id){
- const r=await db.from('site_settings').select('value').eq('key','product_meta_'+id).maybeSingle();
+ const r=await db.from('site_settings').select('setting_value').eq('setting_key','product_meta_'+id).maybeSingle();
  if(r.error)throw r.error;
- return r.data&&r.data.value?r.data.value:{};
+ return r.data&&r.data.setting_value?r.data.setting_value:{};
 }
 async function saveProductMeta(id,value){
- const r=await db.from('site_settings').upsert({key:'product_meta_'+id,value:value},{onConflict:'key'});
+ const r=await db.from('site_settings').upsert({setting_key:'product_meta_'+id,setting_setting_value:value},{onConflict:'key'});
  if(r.error)throw r.error;
 }
 async function products(){
@@ -262,7 +262,7 @@ window.saveProduct=async function(id){
 async function numbers(){
  const {data,error}=await db.from('numbers').select('*').order('sort_order');
  if(error)return content.innerHTML=`<div class="panel">${error.message}</div>`;
- content.innerHTML=`<div class="panel"><h3>THE NUMBERS</h3>${data.map(x=>`<div class="row"><div><b>${x.label}</b><div class="muted">${x.value}</div></div><button class="btn secondary" onclick="editNumber('${x.id}')">Edit</button></div>`).join('')}</div>`;
+ content.innerHTML=`<div class="panel"><h3>THE NUMBERS</h3>${data.map(x=>`<div class="row"><div><b>${x.label}</b><div class="muted">${x.setting_value}</div></div><button class="btn secondary" onclick="editNumber('${x.id}')">Edit</button></div>`).join('')}</div>`;
 }
 window.editNumber=async id=>{let {data}=await db.from('numbers').select('*').eq('id',id).single();content.innerHTML=`<div class="panel"><h3>Edit statistic</h3><label>Label</label><input id="nl" value="${data.label}"><label>Value</label><input id="nv" value="${data.value}"><label>Description</label><input id="nd" value="${data.description||''}"><button class="btn" onclick="saveNumber('${id}')">Save</button> <button class="btn secondary" onclick="numbers()">Cancel</button></div>`};
 window.saveNumber=async id=>{let r=await db.from('numbers').update({label:nl.value,value:nv.value,description:nd.value}).eq('id',id);if(r.error)toast(r.error.message);else{toast('Saved');numbers()}};
@@ -275,13 +275,13 @@ window.uploadMedia=async()=>{let files=[...file.files];if(!files.length)return t
 async function simple(p){let table=p==='collections'?'collections':p;let {data,error}=await db.from(table).select('*').limit(100);content.innerHTML=`<div class="panel"><h3>${p[0].toUpperCase()+p.slice(1)}</h3>${error?error.message:(data.length?data.map(x=>`<div class="row"><b>${x.name||x.title||x.order_number||x.label||x.setting_key||x.slug||x.id}</b><span class="muted">${x.created_at?new Date(x.created_at).toLocaleDateString():''}</span></div>`).join(''):'No records yet.')}</div>`}
 
 async function homepage(){
- const r=await db.from('site_settings').select('*').eq('key','homepage').maybeSingle();
- const v=r.data&&r.data.value?r.data.value:{};
+ const r=await db.from('site_settings').select('*').eq('setting_key','homepage').maybeSingle();
+ const v=r.data&&r.data.setting_value?r.data.setting_value:{};
  content.innerHTML='<div class="panel"><h3>Homepage Editor</h3><label>Hero heading</label><textarea id="hh" rows="3">'+(v.hero_heading||'WEAR\\nTHE\\nVOID.')+'</textarea><label>Hero description</label><textarea id="hd" rows="3">'+(v.hero_description||'')+'</textarea><label>CTA label</label><input id="hc" value="'+(v.cta_label||'Explore collection')+'"><label>CTA URL</label><input id="hu" value="'+(v.cta_url||'#collection')+'"><label>Hero image URL</label><input id="hi" value="'+(v.hero_image||'')+'"><label>Atelier title</label><textarea id="st" rows="2">'+(v.story_title||'MADE IN INDIA.\\nBUILT DIFFERENT.')+'</textarea><label>Atelier description</label><textarea id="sd" rows="4">'+(v.story_description||'')+'</textarea><button class="btn" onclick="saveHomepage()">Save homepage</button></div>';
 }
 window.saveHomepage=async function(){
  const value={hero_heading:document.getElementById('hh').value,hero_description:document.getElementById('hd').value,cta_label:document.getElementById('hc').value,cta_url:document.getElementById('hu').value,hero_image:document.getElementById('hi').value,story_title:document.getElementById('st').value,story_description:document.getElementById('sd').value};
- const r=await db.from('site_settings').upsert({key:'homepage',value:value},{onConflict:'key'});
+ const r=await db.from('site_settings').upsert({setting_key:'homepage',setting_setting_value:value},{onConflict:'key'});
  if(r.error)toast(r.error.message);else toast('Homepage saved');
 };
 async function navigation(){
@@ -300,8 +300,8 @@ window.saveNav=async function(id){
 };
 window.deleteNav=async function(id){if(!confirm('Delete this link?'))return;const r=await db.from('navigation').delete().eq('id',id);if(r.error)toast(r.error.message);else navigation()};
 async function brandPage(kind){
- const r=await db.from('site_settings').select('*').eq('key',kind+'_page').maybeSingle();
- const v=r.data&&r.data.value?r.data.value:{};
+ const r=await db.from('site_settings').select('*').eq('setting_key',kind+'_page').maybeSingle();
+ const v=r.data&&r.data.setting_value?r.data.setting_value:{};
  const defaults={
  story:{eyebrow:'VASTRAMM BY MY3 / OUR STORY',title:'BUILT FROM\\nIDENTITY.',intro:'VASTRAMM BY MY3 is a contemporary Indian label built around the belief that clothing can feel both deeply rooted and completely new.',beginTitle:'FROM AN IDEA TO AN ATELIER.',beginText:'VASTRAMM began with a simple question: what happens when Indian fashion language meets the precision, restraint and attitude of modern streetwear?',beginText2:'The answer is a label built around silhouettes rather than noise — considered pieces, strong proportions and a visual identity that can live in both the physical and digital world.',methodTitle:'FEWER PIECES.\\nSTRONGER IMPACT.',methodText:'Each release is treated like an atelier project. We focus on fabric, fit, proportion, finishing and the feeling a piece creates.',methodText2:'The collection evolves, but the principle stays constant: make it intentional.',manifesto:'INDIAN ROOTS.\\nGLOBAL ATTITUDE.\\nNO COMPROMISE.'},
  my3:{eyebrow:'VASTRAMM BY MY3 / THE MARK',title:'THE NAME\\nBEHIND THE LABEL.',intro:'MY3 is the signature mark behind VASTRAMM — a compact identity designed to feel personal, memorable and unmistakably ours.',whyTitle:'A SMALL MARK WITH A BIGGER IDEA.',whyText:'MY3 represents the identity behind VASTRAMM. It is deliberately short, direct and easy to recognize.',whyText2:'Rather than competing with the VASTRAMM name, MY3 acts as its signature: the personal stamp behind the atelier.',symbolTitle:'THREE CHARACTERS.\\nONE IDENTITY.',symbolText:'The “MY” gives the mark a personal feeling, while the “3” gives it a sharp visual ending.',symbolText2:'Its minimal form reflects the same design language used throughout VASTRAMM: clean, monochrome, confident and without unnecessary noise.',principles:'PERSONAL.\\nMINIMAL.\\nICONIC.'},
@@ -318,17 +318,17 @@ async function brandPage(kind){
 window.saveBrandPage=async function(kind){
  const keys=kind==='story'?['eyebrow','title','intro','beginTitle','beginText','beginText2','methodTitle','methodText','methodText2','manifesto']:kind==='my3'?['eyebrow','title','intro','whyTitle','whyText','whyText2','symbolTitle','symbolText','symbolText2','principles']:['eyebrow','title','intro','email','instagram','phone','address'];
  const value={};keys.forEach(function(k){value[k]=document.getElementById('bp_'+k).value});
- const r=await db.from('site_settings').upsert({key:kind+'_page',value:value},{onConflict:'key'});
+ const r=await db.from('site_settings').upsert({setting_key:kind+'_page',setting_setting_value:value},{onConflict:'key'});
  if(r.error)toast(r.error.message);else toast(kind.toUpperCase()+' page saved');
 };
 
 async function settings(){
  const r=await db.from('site_settings').select('*').order('key');
- content.innerHTML='<div class="panel"><h3>Store Settings</h3><label>Key</label><input id="sk"><label>Value</label><textarea id="sv" rows="5"></textarea><button class="btn" onclick="saveSetting()">Save</button></div><div class="panel"><h3>Existing settings</h3>'+(r.data||[]).map(function(x){return '<div class="row"><div><b>'+x.key+'</b><div class="muted">'+JSON.stringify(x.value)+'</div></div><button class="btn secondary" onclick="loadSetting(\''+x.key.replace(/'/g,"\\'")+'\')">Edit</button></div>'}).join('')+'</div>';
+ content.innerHTML='<div class="panel"><h3>Store Settings</h3><label>Key</label><input id="sk"><label>Value</label><textarea id="sv" rows="5"></textarea><button class="btn" onclick="saveSetting()">Save</button></div><div class="panel"><h3>Existing settings</h3>'+(r.data||[]).map(function(x){return '<div class="row"><div><b>'+x.key+'</b><div class="muted">'+JSON.stringify(x.setting_value)+'</div></div><button class="btn secondary" onclick="loadSetting(\''+x.key.replace(/'/g,"\\'")+'\')">Edit</button></div>'}).join('')+'</div>';
 }
-window.loadSetting=async function(key){const r=await db.from('site_settings').select('*').eq('key',key).single();if(r.data){document.getElementById('sk').value=r.data.key;document.getElementById('sv').value=typeof r.data.value==='string'?r.data.value:JSON.stringify(r.data.value,null,2)}};
-window.saveSetting=async function(){let v=document.getElementById('sv').value;try{v=JSON.parse(v)}catch(e){}const r=await db.from('site_settings').upsert({key:document.getElementById('sk').value.trim(),value:v},{onConflict:'key'});if(r.error)toast(r.error.message);else{toast('Setting saved');settings()}};
-window.deleteProduct=async function(id){if(!confirm('Delete this product?'))return;const r=await db.from('products').delete().eq('id',id);if(r.error)toast(r.error.message);else{await db.from('site_settings').delete().eq('key','product_meta_'+id);toast('Product deleted');products()}};
+window.loadSetting=async function(key){const r=await db.from('site_settings').select('*').eq('setting_key',key).single();if(r.data){document.getElementById('sk').value=r.data.key;document.getElementById('sv').value=typeof r.data.setting_value==='string'?r.data.setting_value:JSON.stringify(r.data.setting_value,null,2)}};
+window.saveSetting=async function(){let v=document.getElementById('sv').value;try{v=JSON.parse(v)}catch(e){}const r=await db.from('site_settings').upsert({setting_key:document.getElementById('sk').value.trim(),setting_value:v},{onConflict:'key'});if(r.error)toast(r.error.message);else{toast('Setting saved');settings()}};
+window.deleteProduct=async function(id){if(!confirm('Delete this product?'))return;const r=await db.from('products').delete().eq('id',id);if(r.error)toast(r.error.message);else{await db.from('site_settings').delete().eq('setting_key','product_meta_'+id);toast('Product deleted');products()}};
 
 boot();
 </script>
