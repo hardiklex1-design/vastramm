@@ -281,8 +281,21 @@ async function media(){
  content.innerHTML=`<div class="panel"><h3>Media Library</h3><input id="file" type="file" multiple accept="image/*"><button class="btn" onclick="uploadMedia()">Upload images</button><div class="grid" style="margin-top:18px">${data.map(x=>{let u=db.storage.from('vastramm-media').getPublicUrl(x.name).data.publicUrl;return `<div class="stat"><img class="thumb" src="${u}"><div style="word-break:break-all;margin-top:8px">${x.name}</div></div>`}).join('')}</div></div>`;
 }
 window.uploadMedia=async()=>{let files=[...file.files];if(!files.length)return toast('Choose images first');for(const f of files){let path=Date.now()+'-'+f.name.replace(/[^a-zA-Z0-9._-]/g,'-');let r=await db.storage.from('vastramm-media').upload(path,f,{upsert:false});if(r.error)return toast(r.error.message);let u=db.storage.from('vastramm-media').getPublicUrl(path).data.publicUrl;await db.from('media').insert({file_name:f.name,file_url:u,file_type:f.type,file_size:f.size})}toast('Images uploaded');media()};
-async function simple(p){let table=p==='collections'?'collections':p;let {data,error}=await db.from(table).select('*').limit(100);content.innerHTML=`<div class="panel"><h3>${p[0].toUpperCase()+p.slice(1)}</h3>${error?error.message:(data.length?data.map(x=>`<div class="row"><b>${x.name||x.title||x.order_number||x.label||x.setting_key||x.slug||x.id}</b><span class="muted">${x.created_at?new Date(x.created_at).toLocaleDateString():''}</span></div>`).join(''):'No records yet.')}</div>`}
-
+async function simple(p){
+ let table=p==='collections'?'collections':p;
+ let {data,error}=await db.from(table).select('*').limit(100);
+ if(p!=='orders')return content.innerHTML='<div class="panel"><h3>'+esc(p[0].toUpperCase()+p.slice(1))+'</h3>'+ (error?'<p class="danger">'+esc(error.message)+'</p>':(data&&data.length?data.map(x=>'<div class="row"><b>'+esc(x.name||x.title||x.label||x.setting_key||x.slug||x.id)+'</b><span class="muted">'+(x.created_at?new Date(x.created_at).toLocaleDateString():'')+'</span></div>').join(''):'<p class="muted">No records yet.</p>'))+'</div>';
+ if(error)return content.innerHTML='<div class="panel"><h3>Orders</h3><p class="danger">'+esc(error.message)+'</p></div>';
+ const statuses=['ORDER PLACED','CONFIRMED','PACKED','SHIPPED','OUT FOR DELIVERY','DELIVERED','CANCELLED'];
+ content.innerHTML='<div class="panel"><h3>Orders</h3>'+(data&&data.length?data.map(x=>'<div class="row" style="display:block"><div><b>'+esc(x.order_number||x.id)+'</b></div><div class="muted">'+esc(x.customer_name||x.name||x.email||'Customer')+' · ₹'+Number(x.total||0).toLocaleString('en-IN')+'</div><select onchange="updateOrderStatus(\''+x.id+'\',this.value)">'+statuses.map(v=>'<option '+(String(x.tracking_status||x.status||'ORDER PLACED')===v?'selected':'')+'>'+v+'</option>').join('')+'</select></div>').join(''):'<p class="muted">No orders yet.</p>')+'</div>';
+}
+window.updateOrderStatus=async function(id,status){
+ let r=await db.from('orders').update({tracking_status:status,status:status}).eq('id',id);
+ if(r.error){
+  r=await db.from('orders').update({status:status}).eq('id',id);
+ }
+ if(r.error)toast(r.error.message);else toast('Order status updated');
+};
 async function homepage(){
  const r=await db.from('site_settings').select('*').eq('setting_key','homepage').maybeSingle();
  const v=r.data&&r.data.setting_value?r.data.setting_value:{};
