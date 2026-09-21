@@ -340,11 +340,11 @@ async function simple(p){
  content.innerHTML='<div class="panel"><h3>Orders</h3>'+(data&&data.length?data.map(x=>'<div class="row" style="display:block"><div><b>'+esc(x.order_number||x.id)+'</b></div><div class="muted">'+esc(x.customer_name||x.name||x.email||'Customer')+' · ₹'+Number(x.total||0).toLocaleString('en-IN')+'</div><select onchange="updateOrderStatus(\''+x.id+'\',this.value)">'+statuses.map(v=>'<option '+(String(x.tracking_status||x.status||'ORDER PLACED')===v?'selected':'')+'>'+v+'</option>').join('')+'</select></div>').join(''):'<p class="muted">No orders yet.</p>')+'</div>';
 }
 window.updateOrderStatus=async function(id,status){
- let r=await db.from('orders').update({tracking_status:status,status:status}).eq('id',id);
- if(r.error){
-  r=await db.from('orders').update({status:status}).eq('id',id);
- }
- if(r.error)toast(r.error.message);else toast('Order status updated');
+ // The orders table does not have a "status" column in this schema.
+ // Use tracking_status only so order updates cannot fail on a missing column.
+ const r=await db.from('orders').update({tracking_status:status}).eq('id',id);
+ if(r.error)toast('Order status could not be updated: '+r.error.message);
+ else toast('Order status updated');
 };
 async function homepage(){
  const r=await db.from('site_settings').select('*').eq('setting_key','homepage').maybeSingle();
