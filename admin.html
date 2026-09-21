@@ -166,23 +166,23 @@ async function saveProductMeta(id,value){
  if(r.error)throw r.error;
 }
 async function renderProducts(){
+ content.innerHTML='<div class="panel"><h3>Products</h3><p class="muted">Loading products…</p></div>';
  try{
-  const r=await db.from('products').select('*').order('sort_order',{ascending:true});
+  const r=await db.from('products').select('*');
   if(r.error)throw r.error;
   const data=r.data||[];
-  let metas={};
-  try{
-   const mr=await db.from('site_settings').select('setting_key,setting_value').like('setting_key','product_meta_%');
-   if(!mr.error)(mr.data||[]).forEach(function(x){metas[String(x.setting_key).replace('product_meta_','')]=x.setting_value||{}});
-  }catch(e){}
-  content.innerHTML='<div class="panel"><div class="top"><h3>Products</h3><button class="btn" onclick="newProduct()">+ Add product</button></div>'+
-   (data.length?data.map(function(x){const m=metas[String(x.id)]||{};return '<div class="row"><div><b>'+esc(x.name||'Untitled')+'</b><div class="muted">'+esc(x.sku||'')+' · ₹'+Number(x.price||0).toLocaleString('en-IN')+' · '+Number(x.stock||0)+' stock · '+(Array.isArray(m.images)?m.images.length:0)+' images · '+esc(m.status||'available')+(m.featured?' · FEATURED':'')+'</div></div><button class="btn secondary" onclick="editProduct(\''+x.id+'\')">Edit</button></div>'}).join(''):'<p class="muted">No products yet. Click + Add product to create your first one.</p>')+
+  content.innerHTML='<div class="panel"><div class="top"><h3>Products</h3><button type="button" class="btn" id="addProductBtn">+ Add product</button></div>'+
+   (data.length?data.map(function(x){return '<div class="row"><div><b>'+esc(x.name||'Untitled')+'</b><div class="muted">'+esc(x.sku||'')+' · ₹'+Number(x.price||0).toLocaleString('en-IN')+' · '+Number(x.stock||0)+' stock</div></div><button type="button" class="btn secondary edit-product-btn" data-id="'+esc(x.id)+'">Edit</button></div>'}).join(''):'<p class="muted">No products yet.</p>')+
    '</div>';
+  document.getElementById('addProductBtn').onclick=function(){productForm()};
+  document.querySelectorAll('.edit-product-btn').forEach(function(btn){btn.onclick=function(){editProduct(btn.dataset.id)}});
  }catch(e){
-  content.innerHTML='<div class="panel"><h3>Products</h3><p class="danger">'+esc(e.message||'Could not load products')+'</p><button class="btn" onclick="newProduct()">+ Add product anyway</button></div>';
+  content.innerHTML='<div class="panel"><h3>Products</h3><p class="danger">'+esc(e.message||'Could not load products')+'</p><button type="button" class="btn" id="addProductAnyway">+ Add product</button></div>';
+  document.getElementById('addProductAnyway').onclick=function(){productForm()};
  }
 }
-window.products=renderProducts; window.newProduct=()=>productForm();
+window.products=renderProducts;
+window.newProduct=()=>productForm();
 window.editProduct=async id=>{
  const r=await db.from('products').select('*').eq('id',id).single();
  if(r.error)return toast(r.error.message);
