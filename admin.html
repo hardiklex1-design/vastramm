@@ -117,8 +117,12 @@ async function load(p){
  return simple(p);
 }
 async function dashboard(){
- const [pr,nu,or,pg,me]=await Promise.all(['products','numbers','orders','pages','media'].map(count));
- content.innerHTML=`<div class="grid">${[['Products',pr],['Numbers',nu],['Orders',or],['Pages',pg],['Media',me]].map(x=>`<div class="stat">${x[0]}<b>${x[1]}</b></div>`).join('')}</div><div class="panel"><h3>VASTRAMM Admin</h3><p class="muted">Your admin panel is connected to Supabase. Use the sections on the left to manage your store.</p></div>`;
+ content.innerHTML='<div class="grid"><div class="stat">Products<b id="s-products">—</b></div><div class="stat">Numbers<b id="s-numbers">—</b></div><div class="stat">Orders<b id="s-orders">—</b></div><div class="stat">Pages<b id="s-pages">—</b></div><div class="stat">Media<b id="s-media">—</b></div></div><div class="panel"><h3>VASTRAMM Admin</h3><p class="muted">Signed in successfully. Loading store data…</p></div>';
+ const names=['products','numbers','orders','pages','media'];
+ const results=await Promise.all(names.map(async t=>Promise.race([count(t),new Promise(r=>setTimeout(()=>r(null),5000))])));
+ results.forEach((v,k)=>{const e=document.getElementById('s-'+names[k]);if(e)e.textContent=v===null?'—':v});
+ const note=document.querySelector('.panel p');
+ if(note)note.textContent=results.some(v=>v===null)?'Admin is open. Some Supabase data is temporarily unavailable.':'Your admin panel is connected to Supabase.';
 }
 async function products(){
  const {data,error}=await db.from('products').select('*').order('sort_order');
