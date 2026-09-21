@@ -49,7 +49,7 @@ async function loadStore(){
 try{
  const [{data:products},{data:numbers},{data:settings},{data:nav},{data:productMeta},{data:numbersOverride}]=await Promise.all([
  db.from('products').select('*').order('created_at',{ascending:true}),
- db.from('numbers').select('*').eq('visible',true).order('sort_order',{ascending:true}),
+ db.from('numbers').select('*').order('sort_order',{ascending:true}),
  db.from('site_settings').select('*').eq('setting_key','homepage').maybeSingle(),
  db.from('navigation').select('*').eq('visible',true).order('sort_order',{ascending:true}),
  db.from('site_settings').select('*').like('setting_key','product_meta_%'),
@@ -74,7 +74,7 @@ try{
 }).join('');
   document.querySelector('#collection .head .muted').textContent='09 / 09 pieces';
  }
- const liveNumbers=(numbersOverride&&Array.isArray(numbersOverride.setting_value))?numbersOverride.setting_value:numbers;
+ const liveNumbers=(Array.isArray(numbers)&&numbers.length)?numbers:((numbersOverride&&Array.isArray(numbersOverride.setting_value))?numbersOverride.setting_value:[]);
  if(Array.isArray(liveNumbers)&&liveNumbers.length)document.querySelector('.numbers').innerHTML=liveNumbers.filter(n=>n.visible!==false).sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0)).map(n=>'<div class="number"><b>'+esc(n.value)+'</b><span>'+esc(n.label)+'</span></div>').join('');
 }catch(e){console.warn('VASTRAMM live data unavailable; showing built-in preview.',e)}
 }loadStore();
