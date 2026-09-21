@@ -17,7 +17,7 @@ function timeout(p,ms){return Promise.race([p,new Promise(function(_,reject){set
 function cart(){try{return JSON.parse(localStorage.getItem("vastramm_cart")||"[]")}catch(e){return[]}}
 function saveCart(x){localStorage.setItem("vastramm_cart",JSON.stringify(x))}
 function render(product,meta){
- var images=Array.isArray(meta.images)?meta.images:[];var soldOut=meta.status==="soldout";
+ var images=Array.isArray(meta.images)?meta.images:[];var soldOut=meta.status==="soldout"||Number(product.stock||0)<=0;
  window.VASTRAMM_PRODUCT={id:product.id||product.sku,name:product.name,sku:product.sku||"",price:Number(product.price||0),images:images};
  document.title=product.name+" — VASTRAMM";
  document.getElementById("app").innerHTML='<div class="layout"><div class="gallery">'+(images.length?images.map(function(u){return '<img src="'+esc(u)+'" alt="'+esc(product.name)+'">'}).join(""):'<div class="placeholder">VASTRAMM / NO IMAGE</div>')+'</div><section class="info"><div class="ey">'+esc(product.sku||"VASTRAMM")+' / PRODUCT</div><h1>'+esc(product.name)+'</h1><div class="price">₹'+Number(product.price||0).toLocaleString("en-IN")+'</div><span class="pill">'+(meta.status==="soldout"?"SOLD OUT":meta.featured?"FEATURED":"AVAILABLE")+'</span><p class="desc">'+esc(product.description||"No description available.")+'</p><div class="buybox"><div class="ey">QUANTITY</div><input class="qty" id="qty" type="number" min="1" value="1"><div class="actions"><a class="btn" id="add" href="#">'+(soldOut?'SOLD OUT':'ADD TO CART')+'</a><a class="btn dark" id="buy" href="#">'+(soldOut?'SOLD OUT':'BUY NOW')+'</a></div><a class="cart" href="cart.html">VIEW CART →</a></div></section></div>';
