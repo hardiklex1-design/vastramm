@@ -14,7 +14,23 @@ section{padding:110px 0;border-top:1px solid #202020}.head{display:flex;justify-
 .numbers{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #252525}.number{padding:30px;border-right:1px solid #252525}.number:last-child{border:0}.number b{display:block;font-size:40px}.number span{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#777}
 .story{display:grid;grid-template-columns:1fr 1fr;gap:80px}.story h2{font-size:62px;line-height:.92;margin:0}.story p{font-size:17px;color:#aaa;max-width:650px}
 footer{border-top:1px solid #202020;padding:55px 0 80px;color:#777;font-size:11px;display:flex;justify-content:space-between}
-@media(max-width:800px){.links{display:none}.wrap{padding:0 18px}.hero{padding-bottom:55px}.hero h1{letter-spacing:-5px}.products,.story{grid-template-columns:1fr}.numbers{grid-template-columns:1fr 1fr}.number:nth-child(2){border-right:0}.number:nth-child(-n+2){border-bottom:1px solid #252525}.story h2{font-size:45px}footer{display:block}footer div+div{margin-top:12px}}
+@media(max-width:800px){
+ .wrap{padding:0 18px}
+ nav{padding:12px 14px;display:block;background:linear-gradient(#080808 70%,transparent)}
+ .logo{display:block;margin-bottom:10px;font-size:14px}
+ .links{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+ .links::-webkit-scrollbar{display:none}
+ .links a{flex:0 0 auto;border:1px solid #333;background:#0d0d0d;padding:8px 10px;border-radius:3px;font-size:9px;letter-spacing:1.2px}
+ .hero{padding-top:145px;padding-bottom:55px}
+ .hero h1{letter-spacing:-5px}
+ .products,.story{grid-template-columns:1fr}
+ .numbers{grid-template-columns:1fr 1fr}
+ .number:nth-child(2){border-right:0}
+ .number:nth-child(-n+2){border-bottom:1px solid #252525}
+ .story h2{font-size:45px}
+ footer{display:block}
+ footer div+div{margin-top:12px}
+}
 </style>
 </head>
 <body>
