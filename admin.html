@@ -320,14 +320,14 @@ async function brandPage(kind){
  }[kind];
  const x=Object.assign({},defaults,v);
  const fields=kind==='story'
- ? [['eyebrow','Eyebrow'],['title','Main title'],['intro','Introduction'],['beginTitle','Beginning title'],['beginText','Beginning text'],['methodTitle','Method title'],['methodText','Method text'],['manifesto','Manifesto']]
+ ? [['eyebrow','Eyebrow'],['title','Main title'],['intro','Introduction'],['beginTitle','Beginning title'],['beginText','Beginning text'],['beginText2','Beginning text — paragraph 2'],['methodTitle','Method title'],['methodText','Method text'],['methodText2','Method text — paragraph 2'],['manifesto','Manifesto']]
  : kind==='my3'
- ? [['eyebrow','Eyebrow'],['title','Main title'],['intro','Introduction'],['whyTitle','Why MY3 title'],['whyText','Why MY3 text'],['symbolTitle','Symbol title'],['symbolText','Symbol text'],['principles','Principles']]
+ ? [['eyebrow','Eyebrow'],['title','Main title'],['intro','Introduction'],['whyTitle','Why MY3 title'],['whyText','Why MY3 text'],['whyText2','Why MY3 text — paragraph 2'],['symbolTitle','Symbol title'],['symbolText','Symbol text'],['symbolText2','Symbol text — paragraph 2'],['principles','Principles']]
  : [['eyebrow','Eyebrow'],['title','Main title'],['intro','Introduction'],['email','Email'],['instagram','Instagram'],['phone','Phone'],['address','Address']];
- content.innerHTML='<div class="panel"><h3>'+kind.toUpperCase()+' Page Editor</h3>'+fields.map(function(f){return '<label>'+f[1]+'</label><textarea id="bp_'+f[0]+'" rows="'+(f[0].toLowerCase().includes('title')||f[0]==='eyebrow'||f[0]==='email'||f[0]==='phone'||f[0]==='instagram'?'2':'4')+'">'+(x[f[0]]||'')+'</textarea>'}).join('')+'<button class="btn" onclick="saveBrandPage(\''+kind+'\')">Save '+kind+' page</button></div>';
+ content.innerHTML='<div class="panel"><h3>'+kind.toUpperCase()+' Page Editor</h3>'+fields.map(function(f){return '<label>'+f[1]+'</label><textarea id="bp_'+f[0]+'" rows="'+(f[0].toLowerCase().includes('title')||f[0]==='eyebrow'||f[0]==='email'||f[0]==='phone'||f[0]==='instagram'?'2':'4')+'">'+(x[f[0]]||'')+'</textarea>'}).join('')+'<button class="btn" onclick="saveBrandPage(\''+kind+'\')">Save & Publish '+kind+' page</button></div>';
 }
 window.saveBrandPage=async function(kind){
- const keys=kind==='story'?['eyebrow','title','intro','beginTitle','beginText','methodTitle','methodText','manifesto']:kind==='my3'?['eyebrow','title','intro','whyTitle','whyText','symbolTitle','symbolText','principles']:['eyebrow','title','intro','email','instagram','phone','address'];
+ const keys=kind==='story'?['eyebrow','title','intro','beginTitle','beginText','beginText2','methodTitle','methodText','methodText2','manifesto']:kind==='my3'?['eyebrow','title','intro','whyTitle','whyText','whyText2','symbolTitle','symbolText','symbolText2','principles']:['eyebrow','title','intro','email','instagram','phone','address'];
  const value={};keys.forEach(function(k){value[k]=document.getElementById('bp_'+k).value});
  const r=await db.from('site_settings').upsert({key:kind+'_page',value:value},{onConflict:'key'});
  if(r.error)toast(r.error.message);else toast(kind.toUpperCase()+' page saved');
