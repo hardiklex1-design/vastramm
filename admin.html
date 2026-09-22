@@ -54,7 +54,7 @@ input,textarea,select{width:100%;background:#0d0d0d;color:#fff;border:1px solid 
     <button data-page="collections">Collections</button>
     <button data-page="pages">Pages</button>
     <button data-page="media">Media</button>
-    <button data-page="orders">Orders</button><button data-page="homepage">Homepage</button><button data-page="navigation">Navigation</button><button data-page="settings">Settings</button><button data-page="story">Story</button><button data-page="my3">MY3</button><button data-page="contact">Contact</button>
+    <button data-page="orders">Orders</button><button data-page="shipping">Shipping</button><button data-page="homepage">Homepage</button><button data-page="navigation">Navigation</button><button data-page="settings">Settings</button><button data-page="story">Story</button><button data-page="my3">MY3</button><button data-page="contact">Contact</button>
   </div></aside>
   <main class="main">
     <div class="top"><div><h2 id="title">Dashboard</h2><span class="muted">Connected to Supabase</span></div><button class="btn secondary" id="logout">Sign out</button></div>
@@ -354,6 +354,16 @@ window.updateOrderStatus=async function(id,status){
  }catch(e){toast('Order status could not be updated: '+(e.message||'Unknown error'))}
 };
 
+async function shipping(){
+ const r=await db.from('site_settings').select('*').eq('setting_key','shipping_settings').maybeSingle();
+ const v=r.data&&r.data.setting_value?r.data.setting_value:{};
+ content.innerHTML='<div class="panel"><h3>Shipping & Courier</h3><p class="muted">Shiprocket supports courier selection, AWB assignment, pickup scheduling, labels and tracking through its API. Delhivery also supports shipment creation, tracking, labels and pickup requests. Your live courier credentials must be kept server-side.</p><label>Courier platform</label><select id="ship_platform"><option value="Shiprocket" '+(v.platform==='Shiprocket'||!v.platform?'selected':'')+'>Shiprocket</option><option value="Delhivery" '+(v.platform==='Delhivery'?'selected':'')+'>Delhivery</option></select><label>Pickup location name</label><input id="ship_location" value="'+esc(v.location||'')+'" placeholder="VASTRAMM Studio"><label>Pickup address</label><textarea id="ship_address" rows="3" placeholder="Full pickup address">'+esc(v.address||'')+'</textarea><div class="grid"><div><label>City</label><input id="ship_city" value="'+esc(v.city||'')+'"></div><div><label>State</label><input id="ship_state" value="'+esc(v.state||'')+'"></div><div><label>Pincode</label><input id="ship_pincode" value="'+esc(v.pincode||'')+'"></div><div><label>Pickup phone</label><input id="ship_phone" value="'+esc(v.phone||'')+'"></div></div><button class="btn" onclick="saveShipping()">Save shipping settings</button></div><div class="panel"><h3>Order shipping workflow</h3><div class="row"><div><b>1. Order placed</b><div class="muted">Order is created in VASTRAMM Admin.</div></div></div><div class="row"><div><b>2. Create shipment</b><div class="muted">Send customer, items, payment and package details to the courier.</div></div></div><div class="row"><div><b>3. Assign courier + AWB</b><div class="muted">Courier returns the tracking/AWB number.</div></div></div><div class="row"><div><b>4. Book pickup</b><div class="muted">Schedule pickup from your saved VASTRAMM location.</div></div></div><div class="row"><div><b>5. Track</b><div class="muted">Save AWB/tracking data and show shipment progress on Track Order.</div></div></div><p class="muted" style="margin-top:18px">Live API booking is not activated yet because courier API credentials must be connected securely on a backend; they should never be placed in this public GitHub Pages frontend.</p></div>';
+}
+window.saveShipping=async function(){
+ const value={platform:document.getElementById('ship_platform').value,location:document.getElementById('ship_location').value.trim(),address:document.getElementById('ship_address').value.trim(),city:document.getElementById('ship_city').value.trim(),state:document.getElementById('ship_state').value.trim(),pincode:document.getElementById('ship_pincode').value.trim(),phone:document.getElementById('ship_phone').value.trim()};
+ const r=await db.from('site_settings').upsert({setting_key:'shipping_settings',setting_value:value},{onConflict:'setting_key'});
+ if(r.error)toast(r.error.message);else toast('Shipping settings saved');
+};
 async function homepage(){
  const r=await db.from('site_settings').select('*').eq('setting_key','homepage').maybeSingle();
  const v=r.data&&r.data.setting_value?r.data.setting_value:{};
