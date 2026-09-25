@@ -110,41 +110,32 @@ try{
  if(Array.isArray(liveNumbers)&&liveNumbers.length)document.querySelector('.numbers').innerHTML=liveNumbers.filter(n=>n.visible!==false).sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0)).map(n=>'<div class="number"><b>'+esc(n.value)+'</b><span>'+esc(n.label)+'</span></div>').join('');
 }catch(e){console.warn('VASTRAMM live data unavailable; showing built-in preview.',e)}
 }loadStore();
-</script><script type="module">
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-import {OrbitControls} from "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js";
-
+</script><script src="https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.180.0/examples/js/controls/OrbitControls.js"></script>
+<script>
 (()=>{const canvas=document.getElementById("mockupCanvas");if(!canvas)return;
+try{
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x090909);
-const camera=new THREE.PerspectiveCamera(34,1,.1,100);camera.position.set(0,2.9,7.2);
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;
-const controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enablePan=false;controls.minDistance=4.8;controls.maxDistance=9;controls.target.set(0,2.5,0);
-scene.add(new THREE.HemisphereLight(0xffffff,0x202020,2.2));
-const key=new THREE.DirectionalLight(0xffffff,3.5);key.position.set(4,7,6);key.castShadow=true;scene.add(key);
-const rim=new THREE.DirectionalLight(0x8aa0ff,1.4);rim.position.set(-5,4,-4);scene.add(rim);
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x080808,roughness:.92}));floor.rotation.x=-Math.PI/2;floor.position.y=-1.15;floor.receiveShadow=true;scene.add(floor);
-const root=new THREE.Group();root.position.y=0;scene.add(root);
-const black=new THREE.MeshStandardMaterial({color:0x080808,roughness:.58,metalness:.05});
-const skin=new THREE.MeshStandardMaterial({color:0x7b5a49,roughness:.72});
-const torso=new THREE.Mesh(new THREE.CapsuleGeometry(1.35,2.05,10,24),black);torso.scale.set(1.05,1.08,.62);torso.position.y=2.35;torso.castShadow=true;root.add(torso);
-const neck=new THREE.Mesh(new THREE.CylinderGeometry(.38,.42,.45,24),skin);neck.position.y=4.05;neck.castShadow=true;root.add(neck);
-const head=new THREE.Mesh(new THREE.SphereGeometry(.68,24,20),skin);head.scale.y=1.08;head.position.y=4.72;head.castShadow=true;root.add(head);
-function limb(x,y,z,rx){const g=new THREE.Group();g.position.set(x,y,z);g.rotation.z=rx;const m=new THREE.Mesh(new THREE.CapsuleGeometry(.27,1.55,8,16),skin);m.position.y=-.78;m.castShadow=true;g.add(m);root.add(g);return g}
-const la=limb(-1.55,3.55,.0,-.18),ra=limb(1.55,3.55,.0,.18);
-function leg(x){const g=new THREE.Group();g.position.set(x,.2,0);const m=new THREE.Mesh(new THREE.CapsuleGeometry(.38,2.1,8,16),black);m.position.y=-1.05;m.castShadow=true;g.add(m);root.add(g);return g}
-const ll=leg(-.58),rl=leg(.58);
-const shoeMat=new THREE.MeshStandardMaterial({color:0x111111,roughness:.8});
-[ll,rl].forEach(g=>{const sh=new THREE.Mesh(new THREE.BoxGeometry(.72, .35, 1.25),shoeMat);sh.position.set(0,-2.25,.22);sh.castShadow=true;g.add(sh)});
-function printTexture(design,back=false){const c=document.createElement("canvas");c.width=512;c.height=512;const x=c.getContext("2d");x.clearRect(0,0,512,512);if(!back){x.font="900 62px Arial";x.textAlign="center";x.fillStyle="#ffd51a";x.fillText("DRAGON",256,225);x.fillStyle="#ed1730";x.fillText("BALL Z",300,292);x.beginPath();x.arc(260,175,45,0,Math.PI*2);x.fillStyle="#f28b16";x.fill();x.fillStyle="#111";x.font="900 30px Arial";x.fillText("G",260,185)}else{const colors=["#20b8ff","#9b35ff","#ffcf19","#ff4b21","#39d353"];for(let i=0;i<26;i++){x.fillStyle=colors[i%colors.length];x.beginPath();x.arc(256+Math.cos(i*.9)*125,245+Math.sin(i*1.3)*125,35,0,Math.PI*2);x.fill()}x.fillStyle="#ffd33d";x.beginPath();x.arc(256,255,92,0,Math.PI*2);x.fill();x.fillStyle="#111";x.font="900 48px Arial";x.fillText("Z",256,270)}return new THREE.CanvasTexture(c)}
-const front=new THREE.Mesh(new THREE.PlaneGeometry(1.55,1.7),new THREE.MeshBasicMaterial({map:printTexture(1,false),transparent:true}));front.position.set(0,2.45,.655);root.add(front);
-const back=new THREE.Mesh(new THREE.PlaneGeometry(1.55,1.7),new THREE.MeshBasicMaterial({map:printTexture(2,true),transparent:true}));back.position.set(0,2.45,-.655);back.rotation.y=Math.PI;root.add(back);
-let walking=true,auto=false,design=1;
-function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}addEventListener("resize",resize);resize();
-function animate(t){requestAnimationFrame(animate);const time=t*.004;const swing=walking?Math.sin(time*5.5)*.45:0;la.rotation.x=swing;ra.rotation.x=-swing;ll.rotation.x=-swing*.75;rl.rotation.x=swing*.75;root.position.y=walking?Math.abs(Math.sin(time*5.5))*.045:0;if(auto)root.rotation.y+=.008;controls.update();renderer.render(scene,camera)}requestAnimationFrame(animate);
-document.getElementById("mockWalk").onclick=()=>{walking=!walking;document.getElementById("mockWalk").classList.toggle("active",walking)};
-document.getElementById("mockRotate").onclick=()=>{auto=!auto;document.getElementById("mockRotate").classList.toggle("active",auto)};
-document.getElementById("mockFront").onclick=()=>{controls.target.set(0,2.5,0);camera.position.set(0,2.9,7.2);controls.update()};
-document.getElementById("mockBack").onclick=()=>{controls.target.set(0,2.5,0);camera.position.set(0,2.9,-7.2);controls.update()};
-document.getElementById("mockReset").onclick=()=>{root.rotation.y=0;auto=false;walking=true;camera.position.set(0,2.9,7.2);controls.reset();document.querySelectorAll(".mockup3d-controls button").forEach(b=>b.classList.remove("active"));document.getElementById("mockWalk").classList.add("active")};
+const camera=new THREE.PerspectiveCamera(35,1,.1,100);camera.position.set(0,2.8,7);
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;
+const controls=new THREE.OrbitControls(camera,canvas);controls.enableDamping=true;controls.enablePan=false;controls.minDistance=4.5;controls.maxDistance=9;controls.target.set(0,2.4,0);
+scene.add(new THREE.HemisphereLight(0xffffff,0x222222,2.3));const key=new THREE.DirectionalLight(0xffffff,3.2);key.position.set(4,7,6);key.castShadow=true;scene.add(key);const rim=new THREE.DirectionalLight(0x7890ff,1.5);rim.position.set(-5,4,-4);scene.add(rim);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x080808,roughness:.9}));floor.rotation.x=-Math.PI/2;floor.position.y=-1.15;floor.receiveShadow=true;scene.add(floor);
+const root=new THREE.Group();scene.add(root);
+const shirtMat=new THREE.MeshStandardMaterial({color:0x080808,roughness:.55});const skin=new THREE.MeshStandardMaterial({color:0x7a5545,roughness:.72});
+const torso=new THREE.Mesh(new THREE.CapsuleGeometry(1.25,2.0,10,24),shirtMat);torso.scale.set(1.12,1.05,.62);torso.position.y=2.35;torso.castShadow=true;root.add(torso);
+const neck=new THREE.Mesh(new THREE.CylinderGeometry(.37,.42,.42,24),skin);neck.position.y=4.02;root.add(neck);
+const head=new THREE.Mesh(new THREE.SphereGeometry(.68,24,20),skin);head.scale.y=1.08;head.position.y=4.68;root.add(head);
+function limb(x,y,skinPart=true){const g=new THREE.Group();g.position.set(x,y,0);const m=new THREE.Mesh(new THREE.CapsuleGeometry(skinPart?.25:.35,1.55,8,16),skinPart?skin:shirtMat);m.position.y=-.78;g.add(m);root.add(g);return g}
+const la=limb(-1.52,3.55),ra=limb(1.52,3.55),ll=limb(-.58,.15,false),rl=limb(.58,.15,false);
+const texFront=(()=>{const c=document.createElement("canvas");c.width=512;c.height=512;const x=c.getContext("2d");x.clearRect(0,0,512,512);x.textAlign="center";x.font="900 62px Arial";x.fillStyle="#ffd51a";x.fillText("DRAGON",256,220);x.fillStyle="#ed1730";x.fillText("BALL Z",300,288);x.font="900 34px Arial";x.fillStyle="#f28b16";x.fillText("●",256,165);return new THREE.CanvasTexture(c)})();
+const texBack=(()=>{const c=document.createElement("canvas");c.width=512;c.height=512;const x=c.getContext("2d");x.clearRect(0,0,512,512);const colors=["#16b9ff","#9a35ff","#ffd21a","#ff4820","#39d353"];for(let i=0;i<30;i++){x.fillStyle=colors[i%5];x.beginPath();x.arc(256+Math.cos(i*.83)*125,250+Math.sin(i*1.21)*125,34,0,Math.PI*2);x.fill()}x.fillStyle="#ffd83d";x.beginPath();x.arc(256,255,90,0,Math.PI*2);x.fill();x.fillStyle="#111";x.font="900 70px Arial";x.textAlign="center";x.fillText("Z",256,280);return new THREE.CanvasTexture(c)})();
+const pf=new THREE.Mesh(new THREE.PlaneGeometry(1.6,1.7),new THREE.MeshBasicMaterial({map:texFront,transparent:true}));pf.position.set(0,2.45,.64);root.add(pf);
+const pb=new THREE.Mesh(new THREE.PlaneGeometry(1.6,1.7),new THREE.MeshBasicMaterial({map:texBack,transparent:true}));pb.position.set(0,2.45,-.64);pb.rotation.y=Math.PI;root.add(pb);
+let walking=true,auto=false;
+function resize(){const r=canvas.parentElement.getBoundingClientRect();renderer.setSize(r.width,Math.max(500,r.height),false);camera.aspect=r.width/Math.max(500,r.height);camera.updateProjectionMatrix()}addEventListener("resize",resize);resize();
+function frame(t){requestAnimationFrame(frame);const q=t*.004,sw=walking?Math.sin(q*5.5)*.42:0;la.rotation.x=sw;ra.rotation.x=-sw;ll.rotation.x=-sw*.65;rl.rotation.x=sw*.65;root.position.y=walking?Math.abs(Math.sin(q*5.5))*.04:0;if(auto)root.rotation.y+=.008;controls.update();renderer.render(scene,camera)}requestAnimationFrame(frame);
+const $=id=>document.getElementById(id);$("mockWalk").onclick=()=>{walking=!walking;$("mockWalk").classList.toggle("active",walking)};$("mockRotate").onclick=()=>{auto=!auto;$("mockRotate").classList.toggle("active",auto)};$("mockFront").onclick=()=>{camera.position.set(0,2.8,7);controls.target.set(0,2.4,0);controls.update()};$("mockBack").onclick=()=>{camera.position.set(0,2.8,-7);controls.target.set(0,2.4,0);controls.update()};$("mockReset").onclick=()=>{root.rotation.y=0;walking=true;auto=false;camera.position.set(0,2.8,7);controls.reset();$("mockWalk").classList.add("active");$("mockRotate").classList.remove("active")};
+}catch(e){console.error("VASTRAMM 3D failed",e);canvas.parentElement.innerHTML='<div style="height:650px;display:grid;place-items:center;color:#888;letter-spacing:2px;font-size:11px">3D MODEL LOADING FAILED — PLEASE REFRESH</div>'}
 })();
 </script></body></html>
