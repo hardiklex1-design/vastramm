@@ -149,4 +149,4 @@ let running=true,rot=0,t0=performance.now();function animate(now){requestAnimati
 document.getElementById('v3dPause').onclick=()=>{running=!running;document.getElementById('v3dPause').textContent=running?'Pause':'Play'};document.getElementById('v3dReset').onclick=()=>{rot=0;group.rotation.set(0,0,0);group.position.y=0;left.rotation.z=0;right.rotation.z=0};
 window.addEventListener('resize',()=>{camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();renderer.setSize(stage.clientWidth,stage.clientHeight)});
 })();
-</script></body></html>
+</script><script src="/assets/v3d-fix.js?v=20261001"></script></body></html>
