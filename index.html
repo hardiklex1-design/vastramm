@@ -128,109 +128,31 @@ document.getElementById("mockReset").onclick=()=>{rot=0;zoom=.92;auto=false;stag
 function tick(){if(auto){rot+=.45;fig.style.transform=`translate(-50%,-48%) rotateY(${rot}deg) scale(${zoom})`}requestAnimationFrame(tick)}tick();
 })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.180.0/examples/js/loaders/GLTFLoader.js"></script>
-<script>
-(()=> {
-  const stage=document.getElementById('v3dStage');
-  if(!stage || !window.THREE || !THREE.GLTFLoader) return;
-  const T=THREE;
-  const scene=new T.Scene();
-  scene.background=new T.Color(0x080808);
-  const camera=new T.PerspectiveCamera(32,stage.clientWidth/stage.clientHeight,.1,100);
-  camera.position.set(0,.05,5.2);
-  const renderer=new T.WebGLRenderer({antialias:true,alpha:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-  renderer.setSize(stage.clientWidth,stage.clientHeight);
-  renderer.outputColorSpace=T.SRGBColorSpace;
-  renderer.shadowMap.enabled=true;
-  stage.insertBefore(renderer.domElement,stage.firstChild);
-
-  scene.add(new T.HemisphereLight(0xffffff,0x202020,2.0));
-  const key=new T.DirectionalLight(0xffffff,3.0); key.position.set(2,3,4); key.castShadow=true; scene.add(key);
-  const rim=new T.DirectionalLight(0x7d8cff,1.8); rim.position.set(-3,1,-4); scene.add(rim);
-
-  const holder=new T.Group(); scene.add(holder);
-  const loader=new T.GLTFLoader();
-  let model=null, running=true, angle=0, t0=performance.now();
-
-  const frontTex=new T.TextureLoader().load('/assets/vastramm-tee-front.jpg?v=20261001');
-  frontTex.colorSpace=T.SRGBColorSpace;
-  frontTex.wrapS=T.ClampToEdgeWrapping;
-  frontTex.wrapT=T.ClampToEdgeWrapping;
-  frontTex.anisotropy=4;
-
-  const whiteMat=new T.MeshStandardMaterial({color:0xf2f3ef,roughness:.76,metalness:0,side:T.DoubleSide});
-  const frontMat=new T.MeshStandardMaterial({map:frontTex,roughness:.8,metalness:0,side:T.DoubleSide});
-
-  loader.load('/assets/vastramm-tee-3d.glb?v=20261001',g=>{
-    model=g.scene;
-    model.traverse(obj=>{
-      if(!obj.isMesh) return;
-      obj.castShadow=true; obj.receiveShadow=true;
-      const geo=obj.geometry;
-      if(geo.index){
-        const pos=geo.attributes.position;
-        const uv=new Float32Array(pos.count*2);
-        const box=geo.boundingBox || (geo.computeBoundingBox(),geo.boundingBox);
-        const minX=box.min.x,maxX=box.max.x,minY=box.min.y,maxY=box.max.y;
-        for(let i=0;i<pos.count;i++){
-          uv[i*2]=(pos.getX(i)-minX)/(maxX-minX||1);
-          uv[i*2+1]=(pos.getY(i)-minY)/(maxY-minY||1);
-        }
-        geo.setAttribute('uv',new T.BufferAttribute(uv,2));
-        geo.computeVertexNormals();
-        obj.material=[frontMat,whiteMat];
-        geo.clearGroups();
-        const idx=geo.index;
-        const p=new T.Vector3(),q=new T.Vector3(),r=new T.Vector3(),a=new T.Vector3(),b=new T.Vector3(),n=new T.Vector3();
-        let current=-1,startTri=0;
-        for(let tri=0;tri<idx.count/3;tri++){
-          p.fromBufferAttribute(pos,idx.getX(tri*3));
-          q.fromBufferAttribute(pos,idx.getX(tri*3+1));
-          r.fromBufferAttribute(pos,idx.getX(tri*3+2));
-          a.subVectors(q,p); b.subVectors(r,p); n.crossVectors(a,b).normalize();
-          const mat=n.z>0.45?0:1;
-          if(mat!==current){
-            if(current!==-1) geo.addGroup(startTri*3,(tri-startTri)*3,current);
-            current=mat; startTri=tri;
-          }
-        }
-        geo.addGroup(startTri*3,idx.count-startTri*3,current);
-      } else obj.material=whiteMat;
-    });
-    holder.add(model);
-    model.scale.setScalar(1.28);
-    model.rotation.x=0.02;
-  },undefined,()=>{stage.classList.add('v3d-failed')});
-
-  const shadow=new T.Mesh(new T.CircleGeometry(1.65,64),new T.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.5}));
-  shadow.rotation.x=-Math.PI/2; shadow.position.y=-1.65; shadow.scale.y=.18; scene.add(shadow);
-
-  function animate(now){
-    requestAnimationFrame(animate);
-    const t=(now-t0)/1000;
-    if(running){
-      angle += .007;
-      holder.rotation.y=angle;
-      holder.position.y=Math.sin(t*2.1)*.075;
-      holder.rotation.z=Math.sin(t*2.1)*.028;
-    }
-    renderer.render(scene,camera);
-  }
-  requestAnimationFrame(animate);
-
-  document.getElementById('v3dPause').onclick=()=>{
-    running=!running;
-    document.getElementById('v3dPause').textContent=running?'Pause':'Play';
-  };
-  document.getElementById('v3dReset').onclick=()=>{
-    angle=0; holder.rotation.set(0,0,0); holder.position.y=0;
-  };
-  window.addEventListener('resize',()=>{
-    camera.aspect=stage.clientWidth/stage.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(stage.clientWidth,stage.clientHeight);
-  });
-})();
-</script></body>
+<script type="module">
+import 'https://cdn.jsdelivr.net/npm/@google/model-viewer@4.1.0/dist/model-viewer.min.js';
+const stage=document.getElementById('v3dStage');
+const pause=document.getElementById('v3dPause');
+const reset=document.getElementById('v3dReset');
+if(stage){
+  const viewer=document.createElement('model-viewer');
+  viewer.setAttribute('src','/assets/vastramm-tee-3d.glb?v=20261001');
+  viewer.setAttribute('alt','VASTRAMM floating 3D T-shirt');
+  viewer.setAttribute('camera-controls','');
+  viewer.setAttribute('auto-rotate','');
+  viewer.setAttribute('rotation-per-second','18deg');
+  viewer.setAttribute('disable-zoom','');
+  viewer.setAttribute('interaction-prompt','none');
+  viewer.setAttribute('shadow-intensity','1');
+  viewer.setAttribute('exposure','1.15');
+  viewer.setAttribute('camera-orbit','0deg 78deg 3.8m');
+  viewer.style.cssText='width:100%;height:100%;background:transparent;display:block;--poster-color:transparent;';
+  stage.insertBefore(viewer,stage.firstChild);
+  let running=true;
+  pause.onclick=()=>{running=!running;if(running)viewer.setAttribute('auto-rotate','');else viewer.removeAttribute('auto-rotate');pause.textContent=running?'Pause':'Play';};
+  reset.onclick=()=>{viewer.cameraOrbit='0deg 78deg 3.8m';viewer.jumpCameraToGoal();};
+}
+</script>
+<style>
+#v3dStage model-viewer{animation:v3dFloat 3.2s ease-in-out infinite}
+@keyframes v3dFloat{0%,100%{transform:translateY(5px)}50%{transform:translateY(-12px)}}
+</style></body>
