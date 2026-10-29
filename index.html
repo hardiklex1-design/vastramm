@@ -68,7 +68,20 @@ footer{border-top:1px solid #202020;padding:55px 0 80px;color:#777;font-size:11p
 
 @media(max-width:800px){#v3d .v3d-wrap{padding:0 18px}#v3d h2{font-size:34px}.v3d-stage{height:500px}.v3d-controls{bottom:14px}.v3d-note{display:none}}
 </style>
-</head>
+<style>
+/* VASTRAMM motion layer — visual-only enhancement */
+html{scroll-behavior:smooth}
+body{animation:vastrammPageIn .65s cubic-bezier(.2,.7,.2,1) both}
+@keyframes vastrammPageIn{from{opacity:.35}to{opacity:1}}
+a,button,.btn,.product,.item,.panel,.number,.principle,.contact .item,.gallery img,.pic{transition:transform .35s cubic-bezier(.2,.7,.2,1),border-color .35s ease,background-color .35s ease,opacity .35s ease,box-shadow .35s ease}
+a:not(.logo):hover,button:hover,.btn:hover{transform:translateY(-2px)}
+.product:hover,.principle:hover,.contact .item:hover{border-color:#666;box-shadow:0 12px 35px rgba(255,255,255,.035)}
+.gallery img:hover,.pic:hover{transform:scale(1.015)}
+.v-motion-reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.v-motion-reveal.v-motion-visible{opacity:1;transform:translateY(0)}
+body.v-motion-leaving{opacity:0;transform:translateY(5px);transition:opacity .22s ease,transform .22s ease}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.v-motion-reveal{opacity:1;transform:none}body.v-motion-leaving{opacity:1;transform:none}}
+</style></head>
 <body>
 <nav><a class="logo" href="#"><img src="/assets/vastramm-logo.webp?v=20260925" alt="VASTRAMM BY MY3"></a><div class="links"><a href="#collection">Collection</a><a href="#numbers">Numbers</a><a href="story.html">Story</a><a href="my3.html">MY3</a><a href="#atelier">Atelier</a><a href="contact.html">Contact</a></div><div class="shop-tools"><a href="cart.html">CART</a><a href="track.html">TRACK ORDER</a></div></nav>
 <header class="hero"><div class="wrap"><div class="eyebrow">VASTRAMM BY MY3 / DIGITAL ATELIER</div><h1>WEAR<br>THE<br>VOID.</h1><p>Contemporary Indian clothing shaped around sharp silhouettes, quiet luxury and a distinctly digital point of view.</p><a class="btn" href="#collection">Explore collection →</a></div></header>
@@ -131,4 +144,27 @@ function tick(){if(auto){rot+=.45;fig.style.transform=`translate(-50%,-48%) rota
 
 <style>
 
-</style></body>
+</style><script>
+/* VASTRAMM subtle page + scroll animations */
+(function(){
+ const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function setup(){
+  const selectors='header,main>*,section,.hero,.panel,.product,.number,.story,.principle,.contact .item,.gallery img,.manifesto,.item';
+  const reveal=el=>{if(!el||el.dataset.vMotion==="1"||el.closest("#vastramm-cart-drawer"))return;el.dataset.vMotion="1";el.classList.add("v-motion-reveal");if(reduce)el.classList.add("v-motion-visible");else observer.observe(el)};
+  const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("v-motion-visible");observer.unobserve(e.target)}}),{threshold:.08,rootMargin:"0px 0px -25px 0px"});
+  document.querySelectorAll(selectors).forEach(reveal);
+  const mo=new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1){if(n.matches&&n.matches(selectors))reveal(n);n.querySelectorAll&&n.querySelectorAll(selectors).forEach(reveal)}})));
+  mo.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener("click",function(e){
+   const a=e.target.closest("a[href]");
+   if(!a||reduce||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==="_blank"||a.hasAttribute("download"))return;
+   const href=a.getAttribute("href");
+   if(!href||href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||href.startsWith("javascript:"))return;
+   const u=new URL(a.href,location.href);
+   if(u.origin!==location.origin||u.pathname===location.pathname&&u.search===location.search)return;
+   e.preventDefault();document.body.classList.add("v-motion-leaving");setTimeout(()=>location.href=u.href,180);
+  });
+ }
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setup,{once:true});else setup();
+})();
+</script></body>
