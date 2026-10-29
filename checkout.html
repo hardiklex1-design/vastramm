@@ -1,4 +1,17 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Checkout — VASTRAMM</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>*{box-sizing:border-box}body{margin:0;background:#080808;color:#f5f5f2;font-family:Arial;position:relative;overflow-x:hidden}.wrap{position:relative;z-index:1;max-width:1100px;margin:auto;padding:28px}.nav{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #292929;padding-bottom:20px;letter-spacing:3px;font-weight:900}.layout{display:grid;grid-template-columns:1fr .7fr;gap:30px;margin-top:35px}.panel{border:1px solid #292929;background:#111;padding:24px}.field{margin-bottom:16px}.field label{display:block;color:#999;font-size:11px;letter-spacing:2px;margin-bottom:7px}.field input,.field textarea,.field select{width:100%;background:#0b0b0b;color:#fff;border:1px solid #444;padding:13px}.field textarea{min-height:100px}.btn{background:#fff;color:#000;padding:15px 22px;border:0;font-weight:900;cursor:pointer;width:100%}.muted{color:#888}.item{display:flex;justify-content:space-between;border-bottom:1px solid #292929;padding:12px 0}.total{font-size:24px;text-align:right;margin-top:20px}.success{text-align:center;padding:50px 20px}.order{font-size:26px;letter-spacing:3px}.track{display:inline-block;background:#fff;color:#000;padding:14px 20px;margin-top:20px;text-decoration:none;font-weight:900}@media(max-width:750px){.wrap{padding:18px}.layout{grid-template-columns:1fr}}
+</style><style>
+/* VASTRAMM motion layer — visual-only enhancement */
+html{scroll-behavior:smooth}
+body{animation:vastrammPageIn .65s cubic-bezier(.2,.7,.2,1) both}
+@keyframes vastrammPageIn{from{opacity:.35}to{opacity:1}}
+a,button,.btn,.product,.item,.panel,.number,.principle,.contact .item,.gallery img,.pic{transition:transform .35s cubic-bezier(.2,.7,.2,1),border-color .35s ease,background-color .35s ease,opacity .35s ease,box-shadow .35s ease}
+a:not(.logo):hover,button:hover,.btn:hover{transform:translateY(-2px)}
+.product:hover,.principle:hover,.contact .item:hover{border-color:#666;box-shadow:0 12px 35px rgba(255,255,255,.035)}
+.gallery img:hover,.pic:hover{transform:scale(1.015)}
+.v-motion-reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.v-motion-reveal.v-motion-visible{opacity:1;transform:translateY(0)}
+body.v-motion-leaving{opacity:0;transform:translateY(5px);transition:opacity .22s ease,transform .22s ease}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.v-motion-reveal{opacity:1;transform:none}body.v-motion-leaving{opacity:1;transform:none}}
 </style></head><body><div class="wrap"><nav class="nav"><a href="index.html">VASTRAMM BY MY3</a><a href="cart.html">CART</a></nav><main id="app"></main></div><script>
 async function processBuy(){const p=new URLSearchParams(location.search),id=p.get("buy"),qty=Math.max(1,Number(p.get("qty")||1));if(!id)return;try{const r=await db.from("products").select("*").eq("id",id).single();if(r.error)return;let m={};try{m=(await db.from("site_settings").select("setting_value").eq("setting_key","product_meta_"+id).maybeSingle()).data?.setting_value||{}}catch(e){}const item={id:r.data.id,name:r.data.name,sku:r.data.sku||"",price:Number(r.data.price||0),qty,image:Array.isArray(m.images)?m.images[0]||"":""};localStorage.setItem("vastramm_cart",JSON.stringify([item]));history.replaceState({}, "", "checkout.html")}catch(e){}}
 const db=window.supabase.createClient("https://xzipzscjjvkjuzkmtxsj.supabase.co","sb_publishable_GlX_WAPD7MApMRMGGVvMxA_2NtPC_y9");
@@ -31,4 +44,27 @@ async function render(){
 
 async function insertOrder(order){let row={order_number:order.orderNumber,customer_name:order.name,email:order.email,phone:order.phone,address:order.address,city:order.city,pincode:order.pin,items:order.items,total:order.total,payment_method:order.payment,status:"PLACED",tracking_status:"ORDER PLACED"};for(let tries=0;tries<15;tries++){const r=await db.from("orders").insert(row).select().single();if(!r.error)return true;const m=String(r.error.message||"");const mt=m.match(/Could not find the '([^']+)' column of 'orders'|column ['"]?([^'"]+)['"]? of ['"]?orders['"]? does not exist/i);const bad=(mt&&(mt[1]||mt[2]));if(!bad||!(bad in row))return false;delete row[bad]}return false}
 async function submit(ev){ev.preventDefault();const msg=document.getElementById("msg");msg.textContent="Creating your order…";const c=cart(),total=c.reduce((s,x)=>s+x.price*x.qty,0),order={orderNumber:"VST-"+Date.now().toString().slice(-8),name:document.getElementById("name").value.trim(),email:document.getElementById("email").value.trim(),phone:document.getElementById("phone").value.trim(),address:document.getElementById("address").value.trim(),city:document.getElementById("city").value.trim(),pin:document.getElementById("pin").value.trim(),payment:document.getElementById("payment").value,items:c,total:total};let saved=false;try{saved=await insertOrder(order)}catch(e){}localStorage.setItem("vastramm_last_order",JSON.stringify(order));localStorage.setItem("vastramm_order_"+order.orderNumber,JSON.stringify({...order,status:"ORDER PLACED",saved:saved}));localStorage.removeItem("vastramm_cart");document.getElementById("app").innerHTML='<div class="panel success"><div class="muted">ORDER CONFIRMED</div><h1>THANK YOU.</h1><p>Your order number</p><div class="order">'+order.orderNumber+'</div><p class="muted">Keep this number to track your order.</p><a class="track" href="track.html?order='+encodeURIComponent(order.orderNumber)+'">TRACK ORDER</a></div>'}processBuy().then(()=>render());
+</script><script>
+/* VASTRAMM subtle page + scroll animations */
+(function(){
+ const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function setup(){
+  const selectors='header,main>*,section,.hero,.panel,.product,.number,.story,.principle,.contact .item,.gallery img,.manifesto,.item';
+  const reveal=el=>{if(!el||el.dataset.vMotion==="1"||el.closest("#vastramm-cart-drawer"))return;el.dataset.vMotion="1";el.classList.add("v-motion-reveal");if(reduce)el.classList.add("v-motion-visible");else observer.observe(el)};
+  const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("v-motion-visible");observer.unobserve(e.target)}}),{threshold:.08,rootMargin:"0px 0px -25px 0px"});
+  document.querySelectorAll(selectors).forEach(reveal);
+  const mo=new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1){if(n.matches&&n.matches(selectors))reveal(n);n.querySelectorAll&&n.querySelectorAll(selectors).forEach(reveal)}})));
+  mo.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener("click",function(e){
+   const a=e.target.closest("a[href]");
+   if(!a||reduce||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==="_blank"||a.hasAttribute("download"))return;
+   const href=a.getAttribute("href");
+   if(!href||href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||href.startsWith("javascript:"))return;
+   const u=new URL(a.href,location.href);
+   if(u.origin!==location.origin||u.pathname===location.pathname&&u.search===location.search)return;
+   e.preventDefault();document.body.classList.add("v-motion-leaving");setTimeout(()=>location.href=u.href,180);
+  });
+ }
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setup,{once:true});else setup();
+})();
 </script></body></html>
