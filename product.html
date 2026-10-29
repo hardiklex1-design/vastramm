@@ -1,4 +1,36 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VASTRAMM BY MY3 — Product</title><meta name="description" content="Shop VASTRAMM BY MY3 contemporary Indian clothing, including statement jackets, hoodies, shirts, trousers and atelier essentials."><link id="canonical" rel="canonical" href="https://vastramm.co.in/product.html"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>*{box-sizing:border-box}body{margin:0;background:#080808;color:#f5f5f2;font-family:Arial,sans-serif}.watermark{position:fixed;inset:0;display:grid;place-items:center;font-size:clamp(80px,18vw,260px);font-weight:900;letter-spacing:-10px;color:rgba(255,255,255,.025);transform:rotate(-8deg);pointer-events:none}.wrap{position:relative;z-index:1;max-width:1200px;margin:auto;padding:0 28px}.nav{padding:25px 0;border-bottom:1px solid #222;display:flex;justify-content:space-between;letter-spacing:3px;font-weight:900}.nav a{color:#fff;text-decoration:none}.layout{display:grid;grid-template-columns:1.15fr .85fr;gap:60px;padding:70px 0}.gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.gallery img{width:100%;aspect-ratio:1;object-fit:cover;background:#111;border:1px solid #292929}.placeholder{aspect-ratio:1;background:#111;border:1px solid #292929;display:grid;place-items:center;color:#777}.ey{font-size:10px;letter-spacing:4px;color:#888}.info h1{font-size:clamp(44px,7vw,90px);line-height:.88;letter-spacing:-5px;margin:22px 0}.price{font-size:25px;margin:20px 0}.desc{color:#aaa;line-height:1.8;white-space:pre-line}.pill{display:inline-block;border:1px solid #444;padding:8px 11px;font-size:10px;letter-spacing:2px}.buybox{border-top:1px solid #292929;margin-top:28px;padding-top:25px}.qty{width:80px;background:#111;color:#fff;border:1px solid #444;padding:12px}.actions{display:flex;gap:10px;margin:15px 0}.btn{display:inline-block;text-align:center;padding:16px 22px;background:#fff;color:#000;font-weight:900;letter-spacing:1px;text-decoration:none;border:1px solid #fff;cursor:pointer}.btn.dark{background:#111;color:#fff;border-color:#555}.cart{font-size:10px;letter-spacing:2px;color:#aaa;text-decoration:none}.error{padding:70px 0}.error h1{font-size:60px}@media(max-width:800px){.layout{grid-template-columns:1fr;padding:35px 0;gap:25px}.gallery{grid-template-columns:1fr}.actions{flex-direction:column}.btn{width:100%}.info h1{font-size:55px}}
+</style><style>
+/* VASTRAMM motion layer — visual-only enhancement */
+html{scroll-behavior:smooth}
+body{animation:vastrammPageIn .65s cubic-bezier(.2,.7,.2,1) both}
+@keyframes vastrammPageIn{from{opacity:.35}to{opacity:1}}
+a,button,.btn,.product,.item,.panel,.number,.principle,.contact .item,.gallery img,.pic{transition:transform .35s cubic-bezier(.2,.7,.2,1),border-color .35s ease,background-color .35s ease,opacity .35s ease,box-shadow .35s ease}
+a:not(.logo):hover,button:hover,.btn:hover{transform:translateY(-2px)}
+.product:hover,.principle:hover,.contact .item:hover{border-color:#666;box-shadow:0 12px 35px rgba(255,255,255,.035)}
+.gallery img:hover,.pic:hover{transform:scale(1.015)}
+.v-motion-reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.v-motion-reveal.v-motion-visible{opacity:1;transform:translateY(0)}
+body.v-motion-leaving{opacity:0;transform:translateY(5px);transition:opacity .22s ease,transform .22s ease}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.v-motion-reveal{opacity:1;transform:none}body.v-motion-leaving{opacity:1;transform:none}}
+
+/* Animated add-to-cart drawer */
+#vastramm-cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.68);backdrop-filter:blur(5px);z-index:9998;opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s ease}
+#vastramm-cart-overlay.v-open{opacity:1;visibility:visible}
+#vastramm-cart-drawer{position:fixed;z-index:9999;top:0;right:0;width:min(440px,100%);height:100dvh;background:#0d0d0d;color:#f5f5f2;border-left:1px solid #333;box-shadow:-25px 0 80px rgba(0,0,0,.45);padding:28px;transform:translateX(105%);transition:transform .42s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+#vastramm-cart-drawer.v-open{transform:translateX(0)}
+#vastramm-cart-drawer .v-cart-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #292929;padding-bottom:22px;letter-spacing:2px;font-size:11px}
+#vastramm-cart-drawer .v-cart-close{background:none;color:#fff;border:1px solid #444;padding:9px 12px;cursor:pointer;font-size:18px}
+#vastramm-cart-drawer .v-cart-added{font-size:10px;letter-spacing:3px;color:#aaa;margin:28px 0 18px}
+#vastramm-cart-drawer .v-cart-product{display:grid;grid-template-columns:95px 1fr;gap:16px;align-items:center;border-bottom:1px solid #292929;padding-bottom:24px;animation:vCartItemIn .45s .08s both}
+#vastramm-cart-drawer .v-cart-product img,#vastramm-cart-drawer .v-cart-image-empty{width:95px;height:115px;object-fit:cover;background:#191919;border:1px solid #303030}
+#vastramm-cart-drawer .v-cart-product h3{font-size:14px;margin:0 0 8px;letter-spacing:1px}
+#vastramm-cart-drawer .v-cart-product p{font-size:12px;color:#aaa;margin:0;line-height:1.8}
+#vastramm-cart-drawer .v-cart-bottom{margin-top:auto;padding-top:22px}
+#vastramm-cart-drawer .v-cart-subtotal{display:flex;justify-content:space-between;border-top:1px solid #292929;padding:18px 0;font-size:12px;letter-spacing:1px}
+#vastramm-cart-drawer .v-cart-action{display:block;text-align:center;text-decoration:none;padding:16px;margin-top:10px;background:#f5f5f2;color:#080808;font-size:10px;font-weight:900;letter-spacing:2px}
+#vastramm-cart-drawer .v-cart-continue{display:block;text-align:center;color:#aaa;text-decoration:none;font-size:10px;letter-spacing:2px;padding:17px 0}
+@keyframes vCartItemIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){#vastramm-cart-overlay,#vastramm-cart-drawer{transition:none}#vastramm-cart-drawer .v-cart-product{animation:none}}
 </style></head><body><div class="watermark">VASTRAMM</div><div class="wrap"><nav class="nav"><a href="index.html">VASTRAMM</a><a href="index.html#collection">BACK TO COLLECTION ↗</a></nav><main id="app"><div class="layout"><div class="placeholder">LOADING</div><div><div class="ey">VASTRAMM BY MY3</div><h1>LOADING</h1></div></div></main></div><script>
 var db=window.supabase.createClient("https://xzipzscjjvkjuzkmtxsj.supabase.co","sb_publishable_GlX_WAPD7MApMRMGGVvMxA_2NtPC_y9");
 var CATALOG={
@@ -26,7 +58,7 @@ function render(product,meta){
  schema.textContent=JSON.stringify({"@context":"https://schema.org","@type":"Product","name":product.name,"sku":product.sku||undefined,"description":product.description||"VASTRAMM BY MY3 contemporary Indian clothing.","brand":{"@type":"Brand","name":"VASTRAMM BY MY3"},"image":images,"offers":{"@type":"Offer","url":"https://vastramm.co.in/product.html?sku="+encodeURIComponent(product.sku||""),"priceCurrency":"INR","price":String(Number(product.price||0)),"availability":soldOut?"https://schema.org/OutOfStock":"https://schema.org/InStock"}});document.head.appendChild(schema);
  document.getElementById("app").innerHTML='<div class="layout"><div class="gallery">'+(images.length?images.map(function(u){return '<img src="'+esc(u)+'" alt="'+esc(product.name)+'">'}).join(""):'<div class="placeholder">VASTRAMM / NO IMAGE</div>')+'</div><section class="info"><div class="ey">'+esc(product.sku||"VASTRAMM")+' / PRODUCT</div><h1>'+esc(product.name)+'</h1><div class="price">₹'+Number(product.price||0).toLocaleString("en-IN")+'</div><span class="pill">'+(meta.status==="soldout"?"SOLD OUT":meta.featured?"FEATURED":"AVAILABLE")+'</span><p class="desc">'+esc(product.description||"No description available.")+'</p><div class="buybox"><div class="ey">QUANTITY</div><input class="qty" id="qty" type="number" min="1" value="1"><div class="actions"><a class="btn" id="add" href="#">'+(soldOut?'SOLD OUT':'ADD TO CART')+'</a><a class="btn dark" id="buy" href="#">'+(soldOut?'SOLD OUT':'BUY NOW')+'</a></div><a class="cart" href="cart.html">VIEW CART →</a></div></section></div>';
  var q=document.getElementById("qty");
- document.getElementById("add").onclick=function(e){e.preventDefault();if(soldOut){alert("This product is SOLD OUT.");return}var n=Math.max(1,Number(q.value)||1),x=cart(),old=x.find(function(z){return String(z.id)===String(product.id||product.sku)}),item={id:product.id||product.sku,name:product.name,sku:product.sku||"",price:Number(product.price||0),qty:n,image:images[0]||"",status:"available"};if(old)old.qty+=n;else x.push(item);saveCart(x);location.href="cart.html"};
+ document.getElementById("add").onclick=function(e){e.preventDefault();if(soldOut){alert("This product is SOLD OUT.");return}var n=Math.max(1,Number(q.value)||1),x=cart(),old=x.find(function(z){return String(z.id)===String(product.id||product.sku)}),item={id:product.id||product.sku,name:product.name,sku:product.sku||"",price:Number(product.price||0),qty:n,image:images[0]||"",status:"available"};if(old)old.qty+=n;else x.push(item);saveCart(x);openVastrammCartDrawer(item,n)};
  document.getElementById("buy").onclick=function(e){e.preventDefault();if(soldOut){alert("This product is SOLD OUT.");return}var n=Math.max(1,Number(q.value)||1);saveCart([{id:product.id||product.sku,name:product.name,sku:product.sku||"",price:Number(product.price||0),qty:n,image:images[0]||"",status:"available"}]);location.href="checkout.html"};
 }
 async function load(){
@@ -55,4 +87,45 @@ async function load(){
 }
 function showError(msg){document.getElementById("app").innerHTML='<div class="error"><div class="ey">VASTRAMM BY MY3</div><h1>PRODUCT NOT FOUND.</h1><p class="desc">'+esc(msg)+'</p><a class="btn" href="index.html#collection">← BACK TO COLLECTION</a></div>'}
 load();
-</script></script></body></html>
+</script></script><script>
+/* Open the animated drawer after adding a product; cart data remains unchanged */
+function openVastrammCartDrawer(item,addedQty){
+ let overlay=document.getElementById("vastramm-cart-overlay"),drawer=document.getElementById("vastramm-cart-drawer");
+ if(!overlay){overlay=document.createElement("div");overlay.id="vastramm-cart-overlay";overlay.setAttribute("aria-hidden","true");document.body.appendChild(overlay)}
+ if(!drawer){drawer=document.createElement("aside");drawer.id="vastramm-cart-drawer";drawer.setAttribute("role","dialog");drawer.setAttribute("aria-modal","true");drawer.setAttribute("aria-label","Shopping cart");document.body.appendChild(drawer)}
+ const safe=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+ const money=n=>Number(n||0).toLocaleString("en-IN");
+ const cart=(()=>{try{return JSON.parse(localStorage.getItem("vastramm_cart")||"[]")}catch(e){return[]}})();
+ const total=cart.reduce((sum,x)=>sum+Number(x.price||0)*Math.max(1,Number(x.qty)||1),0);
+ const image=item.image?'<img src="'+safe(item.image)+'" alt="'+safe(item.name)+'">':'<div class="v-cart-image-empty"></div>';
+ drawer.innerHTML='<div class="v-cart-top"><span>VASTRAMM / YOUR CART</span><button class="v-cart-close" type="button" aria-label="Close cart">×</button></div><div class="v-cart-added">✓ &nbsp; ADDED TO YOUR CART</div><div class="v-cart-product">'+image+'<div><h3>'+safe(item.name||item.sku||"VASTRAMM PIECE")+'</h3><p>₹'+money(item.price)+'<br>Quantity: '+Math.max(1,Number(addedQty)||1)+'</p></div></div><div class="v-cart-bottom"><div class="v-cart-subtotal"><span>SUBTOTAL · '+cart.reduce((s,x)=>s+Math.max(1,Number(x.qty)||1),0)+' ITEM(S)</span><strong>₹'+money(total)+'</strong></div><a class="v-cart-action" href="cart.html">VIEW CART & CHECK OUT →</a><a class="v-cart-continue" href="index.html#collection">CONTINUE SHOPPING</a></div>';
+ const close=()=>{overlay.classList.remove("v-open");drawer.classList.remove("v-open");document.body.style.overflow="";setTimeout(()=>{overlay.setAttribute("aria-hidden","true")},300)};
+ overlay.onclick=close;drawer.querySelector(".v-cart-close").onclick=close;
+ document.onkeydown=function(e){if(e.key==="Escape")close()};
+ overlay.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";
+ requestAnimationFrame(()=>{overlay.classList.add("v-open");drawer.classList.add("v-open")});
+}
+
+/* VASTRAMM subtle page + scroll animations */
+(function(){
+ const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function setup(){
+  const selectors='header,main>*,section,.hero,.panel,.product,.number,.story,.principle,.contact .item,.gallery img,.manifesto,.item';
+  const reveal=el=>{if(!el||el.dataset.vMotion==="1"||el.closest("#vastramm-cart-drawer"))return;el.dataset.vMotion="1";el.classList.add("v-motion-reveal");if(reduce)el.classList.add("v-motion-visible");else observer.observe(el)};
+  const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("v-motion-visible");observer.unobserve(e.target)}}),{threshold:.08,rootMargin:"0px 0px -25px 0px"});
+  document.querySelectorAll(selectors).forEach(reveal);
+  const mo=new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1){if(n.matches&&n.matches(selectors))reveal(n);n.querySelectorAll&&n.querySelectorAll(selectors).forEach(reveal)}})));
+  mo.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener("click",function(e){
+   const a=e.target.closest("a[href]");
+   if(!a||reduce||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==="_blank"||a.hasAttribute("download"))return;
+   const href=a.getAttribute("href");
+   if(!href||href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||href.startsWith("javascript:"))return;
+   const u=new URL(a.href,location.href);
+   if(u.origin!==location.origin||u.pathname===location.pathname&&u.search===location.search)return;
+   e.preventDefault();document.body.classList.add("v-motion-leaving");setTimeout(()=>location.href=u.href,180);
+  });
+ }
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setup,{once:true});else setup();
+})();
+</script></body></html>
