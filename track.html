@@ -1,4 +1,17 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Track Order — VASTRAMM</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>*{box-sizing:border-box}body{margin:0;background:#080808;color:#f5f5f2;font-family:Arial}.wrap{max-width:850px;margin:auto;padding:30px}.nav{display:flex;justify-content:space-between;border-bottom:1px solid #292929;padding-bottom:20px;letter-spacing:3px;font-weight:900}.panel{margin-top:45px;background:#111;border:1px solid #292929;padding:28px}.field{display:flex;gap:10px}.field input{flex:1;background:#080808;color:#fff;border:1px solid #444;padding:14px}.btn{background:#fff;color:#000;border:0;padding:14px 20px;font-weight:900}.status{margin-top:30px}.step{display:flex;gap:18px;padding:18px 0;border-bottom:1px solid #292929}.dot{width:12px;height:12px;border:1px solid #fff;border-radius:50%;margin-top:4px}.muted{color:#888}.order{font-size:25px;letter-spacing:3px}@media(max-width:600px){.wrap{padding:18px}.field{flex-direction:column}}
+</style><style>
+/* VASTRAMM motion layer — visual-only enhancement */
+html{scroll-behavior:smooth}
+body{animation:vastrammPageIn .65s cubic-bezier(.2,.7,.2,1) both}
+@keyframes vastrammPageIn{from{opacity:.35}to{opacity:1}}
+a,button,.btn,.product,.item,.panel,.number,.principle,.contact .item,.gallery img,.pic{transition:transform .35s cubic-bezier(.2,.7,.2,1),border-color .35s ease,background-color .35s ease,opacity .35s ease,box-shadow .35s ease}
+a:not(.logo):hover,button:hover,.btn:hover{transform:translateY(-2px)}
+.product:hover,.principle:hover,.contact .item:hover{border-color:#666;box-shadow:0 12px 35px rgba(255,255,255,.035)}
+.gallery img:hover,.pic:hover{transform:scale(1.015)}
+.v-motion-reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.v-motion-reveal.v-motion-visible{opacity:1;transform:translateY(0)}
+body.v-motion-leaving{opacity:0;transform:translateY(5px);transition:opacity .22s ease,transform .22s ease}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.v-motion-reveal{opacity:1;transform:none}body.v-motion-leaving{opacity:1;transform:none}}
 </style></head><body><div class="wrap"><nav class="nav"><a href="index.html">VASTRAMM</a><a href="index.html#collection">SHOP</a></nav><main class="panel"><div class="muted">VASTRAMM BY MY3</div><h1>TRACK YOUR ORDER</h1><div class="field"><input id="code" placeholder="Enter order number e.g. VST-12345678"><button class="btn" onclick="track()">TRACK</button></div><div id="result"></div></main></div><script>
 const db=window.supabase.createClient("https://xzipzscjjvkjuzkmtxsj.supabase.co","sb_publishable_GlX_WAPD7MApMRMGGVvMxA_2NtPC_y9");const esc=s=>String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));const params=new URLSearchParams(location.search);if(params.get("order"))document.getElementById("code").value=params.get("order");
 async function track(){
@@ -16,4 +29,27 @@ async function track(){
  stages.map(function(stage,i){const done=current>=i;return '<div class="step" style="opacity:'+(done?'1':'.45')+'"><span class="dot" style="'+(done?'background:#fff':'')+'"></span><div><b>'+stage+'</b><div class="muted">'+(i===current?'Current tracking status.':i<current?'Completed.':i===0?'Your order has been received.':'Waiting for update.')+'</div></div></div>'}).join('')+
  '</div>':'<div class="status"><p>We could not find that order.</p><p class="muted">Check the order number and try again.</p></div>';
 }
+</script><script>
+/* VASTRAMM subtle page + scroll animations */
+(function(){
+ const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function setup(){
+  const selectors='header,main>*,section,.hero,.panel,.product,.number,.story,.principle,.contact .item,.gallery img,.manifesto,.item';
+  const reveal=el=>{if(!el||el.dataset.vMotion==="1"||el.closest("#vastramm-cart-drawer"))return;el.dataset.vMotion="1";el.classList.add("v-motion-reveal");if(reduce)el.classList.add("v-motion-visible");else observer.observe(el)};
+  const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("v-motion-visible");observer.unobserve(e.target)}}),{threshold:.08,rootMargin:"0px 0px -25px 0px"});
+  document.querySelectorAll(selectors).forEach(reveal);
+  const mo=new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1){if(n.matches&&n.matches(selectors))reveal(n);n.querySelectorAll&&n.querySelectorAll(selectors).forEach(reveal)}})));
+  mo.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener("click",function(e){
+   const a=e.target.closest("a[href]");
+   if(!a||reduce||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==="_blank"||a.hasAttribute("download"))return;
+   const href=a.getAttribute("href");
+   if(!href||href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||href.startsWith("javascript:"))return;
+   const u=new URL(a.href,location.href);
+   if(u.origin!==location.origin||u.pathname===location.pathname&&u.search===location.search)return;
+   e.preventDefault();document.body.classList.add("v-motion-leaving");setTimeout(()=>location.href=u.href,180);
+  });
+ }
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setup,{once:true});else setup();
+})();
 </script></body></html>
