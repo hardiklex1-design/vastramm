@@ -6,6 +6,19 @@
 .wrap{position:relative;z-index:1;max-width:1000px;margin:auto;padding:30px}.nav{display:flex;justify-content:space-between;border-bottom:1px solid #292929;padding-bottom:20px;letter-spacing:3px;font-weight:900}.nav a{color:#fff;text-decoration:none}
 .panel{border:1px solid #292929;background:#111;padding:22px;margin-top:30px}.item{display:grid;grid-template-columns:90px 1fr auto;gap:18px;align-items:center;padding:16px 0;border-bottom:1px solid #292929}.item img{width:90px;height:90px;object-fit:cover;background:#171717}.muted{color:#888}.qty{width:70px;background:#0b0b0b;color:#fff;border:1px solid #444;padding:9px}.btn{display:inline-block;background:#fff;color:#000;padding:14px 20px;border:0;font-weight:800;text-decoration:none;margin-top:20px;cursor:pointer}.danger{background:#222;color:#fff;border:1px solid #444}.total{font-size:25px;text-align:right;margin-top:20px}
 @media(max-width:650px){.wrap{padding:18px}.item{grid-template-columns:65px 1fr}.item img{width:65px;height:65px}.item .right{grid-column:2}}
+</style><style>
+/* VASTRAMM motion layer — visual-only enhancement */
+html{scroll-behavior:smooth}
+body{animation:vastrammPageIn .65s cubic-bezier(.2,.7,.2,1) both}
+@keyframes vastrammPageIn{from{opacity:.35}to{opacity:1}}
+a,button,.btn,.product,.item,.panel,.number,.principle,.contact .item,.gallery img,.pic{transition:transform .35s cubic-bezier(.2,.7,.2,1),border-color .35s ease,background-color .35s ease,opacity .35s ease,box-shadow .35s ease}
+a:not(.logo):hover,button:hover,.btn:hover{transform:translateY(-2px)}
+.product:hover,.principle:hover,.contact .item:hover{border-color:#666;box-shadow:0 12px 35px rgba(255,255,255,.035)}
+.gallery img:hover,.pic:hover{transform:scale(1.015)}
+.v-motion-reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.v-motion-reveal.v-motion-visible{opacity:1;transform:translateY(0)}
+body.v-motion-leaving{opacity:0;transform:translateY(5px);transition:opacity .22s ease,transform .22s ease}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.v-motion-reveal{opacity:1;transform:none}body.v-motion-leaving{opacity:1;transform:none}}
 </style></head>
 <body><div class="brand-watermark">VASTRAMM</div><div class="wrap"><nav class="nav"><a href="index.html">VASTRAMM</a><a href="index.html#collection">SHOP</a></nav>
 <main id="app"><div class="panel"><h1>YOUR CART IS EMPTY.</h1><p class="muted">Add a piece from the collection to continue.</p><a class="btn" href="index.html#collection">SHOP COLLECTION</a></div></main></div>
@@ -31,5 +44,28 @@ function draw(){
  app.querySelectorAll(".remove").forEach(function(el){el.addEventListener("click",function(){var a=readCart(),i=Number(el.getAttribute("data-i"));a.splice(i,1);writeCart(a)})});
 }
 draw();
+})();
+</script><script>
+/* VASTRAMM subtle page + scroll animations */
+(function(){
+ const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function setup(){
+  const selectors='header,main>*,section,.hero,.panel,.product,.number,.story,.principle,.contact .item,.gallery img,.manifesto,.item';
+  const reveal=el=>{if(!el||el.dataset.vMotion==="1"||el.closest("#vastramm-cart-drawer"))return;el.dataset.vMotion="1";el.classList.add("v-motion-reveal");if(reduce)el.classList.add("v-motion-visible");else observer.observe(el)};
+  const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("v-motion-visible");observer.unobserve(e.target)}}),{threshold:.08,rootMargin:"0px 0px -25px 0px"});
+  document.querySelectorAll(selectors).forEach(reveal);
+  const mo=new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1){if(n.matches&&n.matches(selectors))reveal(n);n.querySelectorAll&&n.querySelectorAll(selectors).forEach(reveal)}})));
+  mo.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener("click",function(e){
+   const a=e.target.closest("a[href]");
+   if(!a||reduce||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==="_blank"||a.hasAttribute("download"))return;
+   const href=a.getAttribute("href");
+   if(!href||href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||href.startsWith("javascript:"))return;
+   const u=new URL(a.href,location.href);
+   if(u.origin!==location.origin||u.pathname===location.pathname&&u.search===location.search)return;
+   e.preventDefault();document.body.classList.add("v-motion-leaving");setTimeout(()=>location.href=u.href,180);
+  });
+ }
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setup,{once:true});else setup();
 })();
 </script></body></html>
