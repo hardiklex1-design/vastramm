@@ -200,8 +200,8 @@ function productForm(x={}){
  '<label>Stock</label><input id="fstock" type="number" value="'+(x.stock||0)+'">'+
  '<label>Status</label><select id="fstatus"><option value="available" '+((meta.status||'available')==='available'?'selected':'')+'>Available</option><option value="soldout" '+(meta.status==='soldout'?'selected':'')+'>Sold out</option></select>'+
  '<label>Description</label><textarea id="fdesc" rows="5">'+esc(x.description||'')+'</textarea>'+
- '<label>Product images — select MULTIPLE images</label><input id="fimages" type="file" multiple accept="image/*" onchange="previewProductImages()">'+
- '<div class="muted" style="font-size:12px;margin:-7px 0 12px">You can select several images at once. They will all be saved to this product.</div>'+
+ '<label>Product photos — upload up to 12 images (7 or more recommended)</label><input id="fimages" type="file" multiple accept="image/*" onchange="previewProductImages()">'+
+ '<div class="muted" style="font-size:12px;margin:-7px 0 12px">Add at least 7 product angles/details when available. Select multiple photos together; all saved photos appear in the customer gallery.</div>'+
  '<div id="imagePreview" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr));margin:10px 0">'+imgs.map(function(u,i){return '<div class="stat"><img class="thumb" style="width:100%;height:110px" src="'+esc(u)+'"><div style="font-size:11px;margin-top:6px">Saved image '+(i+1)+'</div></div>'}).join('')+'</div>'+
  '<label>Image URLs (optional, one per line)</label><textarea id="furls" rows="4">'+imgs.map(esc).join('\n')+'</textarea>'+
  '<label><input id="ffeatured" type="checkbox" style="width:auto" '+(meta.featured?'checked':'')+'> Featured</label><br><br>'+
@@ -211,6 +211,7 @@ function productForm(x={}){
 }
 window.previewProductImages=function(){
  const box=document.getElementById('imagePreview'),files=Array.from(document.getElementById('fimages').files||[]);
+ if(files.length>12){document.getElementById('fimages').value='';toast('Please select no more than 12 photos at once.');return}
  if(!box||!files.length)return;
  files.forEach(function(file){
   const u=URL.createObjectURL(file);
@@ -263,6 +264,7 @@ window.saveProduct=async function(id){
   const manual=document.getElementById('furls').value.split('\n').map(function(v){return v.trim()}).filter(Boolean);
   if(manual.length)images=manual;
   const files=Array.from(document.getElementById('fimages').files||[]);
+  if(files.length+images.length>12)throw new Error('A product can have up to 12 photos. Remove some image URLs or saved photos first.');
   const newlyUploaded=[];
   for(let i=0;i<files.length;i++){newlyUploaded.push(await uploadProductImage(files[i]));}
   // Put newly uploaded photos first so the homepage card uses the newest product image.
