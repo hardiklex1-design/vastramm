@@ -263,7 +263,10 @@ window.saveProduct=async function(id){
   const manual=document.getElementById('furls').value.split('\n').map(function(v){return v.trim()}).filter(Boolean);
   if(manual.length)images=manual;
   const files=Array.from(document.getElementById('fimages').files||[]);
-  for(let i=0;i<files.length;i++){images.push(await uploadProductImage(files[i]));}
+  const newlyUploaded=[];
+  for(let i=0;i<files.length;i++){newlyUploaded.push(await uploadProductImage(files[i]));}
+  // Put newly uploaded photos first so the homepage card uses the newest product image.
+  images=[...newlyUploaded,...images.filter(url=>!newlyUploaded.includes(url))];
   await saveProductMeta(productId,{images:images,status:selectedStatus,featured:document.getElementById('ffeatured').checked});
   toast('Product saved and published');
   products();
