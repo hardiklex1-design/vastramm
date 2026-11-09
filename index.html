@@ -97,7 +97,7 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 async function loadStore(){
 try{
  const [{data:products},{data:numbers},{data:settings},{data:nav},{data:productMeta},{data:numbersOverride}]=await Promise.all([
- db.from('products').select('*').order('created_at',{ascending:true}),
+ db.from('products').select('*'),
  db.from('numbers').select('*').order('sort_order',{ascending:true}),
  db.from('site_settings').select('*').eq('setting_key','homepage').maybeSingle(),
  db.from('navigation').select('*').eq('visible',true).order('sort_order',{ascending:true}),
@@ -115,10 +115,7 @@ try{
  const metaById={};(productMeta||[]).forEach(function(s){metaById[String(s.setting_key).replace('product_meta_','')]=s.setting_value||{}});
  if(Array.isArray(products)){
   // Render every live database product; do not limit the collection to the original nine SKUs.
-  const liveProducts=products.slice().sort((a,b)=>{
-   const da=a.created_at?new Date(a.created_at).getTime():0,dbb=b.created_at?new Date(b.created_at).getTime():0;
-   return da-dbb;
-  });
+  const liveProducts=products.slice();
   document.querySelector('.products').innerHTML=liveProducts.map(x=>{
  const m=metaById[String(x.id)]||{},img=Array.isArray(m.images)?m.images[0]:'';
  const safeImg=img?String(img).replace(/\\/g,'\\\\').replace(/"/g,'&quot;'):''; const style=safeImg?"style='background-image:linear-gradient(135deg,rgba(30,30,30,.25),rgba(5,5,5,.75)),url(\""+safeImg+"\");background-size:cover;background-position:center'":'';
@@ -129,7 +126,11 @@ try{
  }
  const liveNumbers=(Array.isArray(numbers)&&numbers.length)?numbers:((numbersOverride&&Array.isArray(numbersOverride.setting_value))?numbersOverride.setting_value:[]);
  if(Array.isArray(liveNumbers)&&liveNumbers.length)document.querySelector('.numbers').innerHTML=liveNumbers.filter(n=>n.visible!==false).sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0)).map(n=>'<div class="number"><b>'+esc(n.value)+'</b><span>'+esc(n.label)+'</span></div>').join('');
-}catch(e){console.warn('VASTRAMM live data unavailable; showing built-in preview.',e)}
+}catch(e){
+ console.error('VASTRAMM live data could not be loaded:',e);
+ const grid=document.querySelector('.products');
+ if(grid)grid.innerHTML='<p class="muted">The collection is temporarily unavailable. Please refresh shortly.</p>';
+}
 }loadStore();
 </script><script>
 (()=>{const fig=document.getElementById("mockFigure"),stage=fig?.parentElement;if(!fig)return;let down=false,lastX=0,rot=0,zoom=.92;
