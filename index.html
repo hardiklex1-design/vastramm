@@ -113,15 +113,19 @@ try{
  if(v.story_description){const ps=document.querySelectorAll('#atelier p');if(ps[0])ps[0].textContent=v.story_description}
  if(Array.isArray(nav)&&nav.length)document.querySelector('.links').innerHTML=nav.map(n=>'<a href="'+esc(n.url)+'">'+esc(n.label)+'</a>').join('');
  const metaById={};(productMeta||[]).forEach(function(s){metaById[String(s.setting_key).replace('product_meta_','')]=s.setting_value||{}});
- if(Array.isArray(products)&&products.length){
-  const base=[{sku:'V-01',name:'PHANTOM SHELL',price:8900},{sku:'V-02',name:'ZERO HOOD',price:5400},{sku:'V-03',name:'VOID TROUSER',price:6200},{sku:'V-04',name:'NOIR OVERSHIRT',price:7800},{sku:'V-05',name:'ATELIER TEE',price:3200},{sku:'V-06',name:'VANTA CARGO',price:6900},{sku:'V-07',name:'MONOLITH JACKET',price:11900},{sku:'V-08',name:'ECLIPSE SHIRT',price:5900},{sku:'V-09',name:'ARCHIVE HOODIE',price:6400}];
-  const bySku={};products.forEach(x=>{bySku[String(x.sku||'').toUpperCase()]=x});const merged=base.map(b=>bySku[b.sku]||b);
-  document.querySelector('.products').innerHTML=merged.map(x=>{
+ if(Array.isArray(products)){
+  // Render every live database product; do not limit the collection to the original nine SKUs.
+  const liveProducts=products.slice().sort((a,b)=>{
+   const da=a.created_at?new Date(a.created_at).getTime():0,dbb=b.created_at?new Date(b.created_at).getTime():0;
+   return da-dbb;
+  });
+  document.querySelector('.products').innerHTML=liveProducts.map(x=>{
  const m=metaById[String(x.id)]||{},img=Array.isArray(m.images)?m.images[0]:'';
  const safeImg=img?String(img).replace(/\\/g,'\\\\').replace(/"/g,'&quot;'):''; const style=safeImg?"style='background-image:linear-gradient(135deg,rgba(30,30,30,.25),rgba(5,5,5,.75)),url(\""+safeImg+"\");background-size:cover;background-position:center'":'';
- return '<a class="product" href="product.html?sku='+encodeURIComponent(x.sku||'')+'"><div class="pic" '+style+'>'+ (img?'<img src="'+esc(img)+'" alt="'+esc(x.name||x.sku||'VASTRAMM')+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0">':'<span>'+esc(x.sku||'VASTRAMM')+'</span>') +'</div><div class="details"><h3>'+esc(x.name)+'</h3><div class="price">₹'+Number(x.price||0).toLocaleString('en-IN')+'</div><span class="pill">'+(m.status==='soldout'?'SOLD OUT':m.featured?'FEATURED':'AVAILABLE')+'</span></div></a>';
-}).join('');
-  document.querySelector('#collection .head .muted').textContent='09 / 09 pieces';
+ const productUrl=x.sku?'product.html?sku='+encodeURIComponent(x.sku):'product.html?id='+encodeURIComponent(x.id||'');
+ return '<a class="product" href="'+productUrl+'"><div class="pic" '+style+'>'+ (img?'<img src="'+esc(img)+'" alt="'+esc(x.name||x.sku||'VASTRAMM')+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0">':'<span>'+esc(x.sku||'VASTRAMM')+'</span>') +'</div><div class="details"><h3>'+esc(x.name||'VASTRAMM PIECE')+'</h3><div class="price">₹'+Number(x.price||0).toLocaleString('en-IN')+'</div><span class="pill">'+(m.status==='soldout'?'SOLD OUT':m.featured?'FEATURED':'AVAILABLE')+'</span></div></a>';
+  }).join('');
+  document.querySelector('#collection .head .muted').textContent=String(liveProducts.length).padStart(2,'0')+' / '+String(liveProducts.length).padStart(2,'0')+' pieces';
  }
  const liveNumbers=(Array.isArray(numbers)&&numbers.length)?numbers:((numbersOverride&&Array.isArray(numbersOverride.setting_value))?numbersOverride.setting_value:[]);
  if(Array.isArray(liveNumbers)&&liveNumbers.length)document.querySelector('.numbers').innerHTML=liveNumbers.filter(n=>n.visible!==false).sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0)).map(n=>'<div class="number"><b>'+esc(n.value)+'</b><span>'+esc(n.label)+'</span></div>').join('');
