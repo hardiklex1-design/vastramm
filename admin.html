@@ -250,9 +250,29 @@ window.saveProduct=async function(id){
  try{
   const desired={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:Math.max(0,Math.floor(Number(document.getElementById('fstock').value||0))),description:document.getElementById('fdesc').value};
   if(!desired.name)throw new Error('Product name is required.');
-  const columns=await productColumns(),row=pickProductRow(columns,desired);
+  const columns=await productColumns();
   if(!columns.includes('name'))throw new Error('Your products table is missing the name field.');
   if(!columns.includes('stock'))throw new Error('Your Supabase products table is missing the stock column, so inventory cannot be updated.');
+  // SKU is unique in Supabase. If this SKU is already assigned to another product,
+  // generate the next free SKU instead of letting the database reject the save.
+  if(columns.includes('sku')&&desired.sku){
+   const baseSku=desired.sku;
+   let candidate=baseSku,suffix=2;
+   while(true){
+    const check=await db.from('products').select('id,sku').eq('sku',candidate).limit(1);
+    if(check.error)throw check.error;
+    const existing=check.data&&check.data[0];
+    if(!existing||String(existing.id)===String(id||''))break;
+    candidate=baseSku+'-'+suffix++;
+    if(suffix>1000)throw new Error('Could not generate a unique SKU. Please enter a different SKU.');
+   }
+   if(candidate!==desired.sku){
+    desired.sku=candidate;
+    document.getElementById('fsku').value=candidate;
+    toast('SKU already existed. Assigned '+candidate+' to this product.');
+   }
+  }
+  const row=pickProductRow(columns,desired);
   let r;
   if(id) r=await db.from('products').update(row).eq('id',id).select().single();
   else r=await db.from('products').insert(row).select().single();
@@ -274,7 +294,11 @@ window.saveProduct=async function(id){
   await saveProductMeta(productId,{images:images,status:publishedStatus,featured:document.getElementById('ffeatured').checked});
   toast('Product saved and published');
   products();
- }catch(e){toast(e.message||'Could not save product')}
+ }catch(e){
+  const message=e&&e.message?e.message:'Could not save product';
+  if(message.includes('products_sku_key')||message.toLowerCase().includes('duplicate key'))toast('This SKU is already in use. Please use a unique SKU; no existing product was overwritten.');
+  else toast(message);
+ }
 };
 async function numbers(){
  try{
