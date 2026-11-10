@@ -248,15 +248,16 @@ function pickProductRow(columns,desired){
 }
 window.saveProduct=async function(id){
  try{
-  const selectedStatus=document.getElementById('fstatus').value;
-  const desired={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:selectedStatus==='soldout'?0:Number(document.getElementById('fstock').value||0),description:document.getElementById('fdesc').value};
+  const desired={sku:document.getElementById('fsku').value.trim(),name:document.getElementById('fname').value.trim(),slug:document.getElementById('fslug').value.trim(),price:Number(document.getElementById('fprice').value||0),stock:Math.max(0,Math.floor(Number(document.getElementById('fstock').value||0))),description:document.getElementById('fdesc').value};
   if(!desired.name)throw new Error('Product name is required.');
   const columns=await productColumns(),row=pickProductRow(columns,desired);
   if(!columns.includes('name'))throw new Error('Your products table is missing the name field.');
+  if(!columns.includes('stock'))throw new Error('Your Supabase products table is missing the stock column, so inventory cannot be updated.');
   let r;
   if(id) r=await db.from('products').update(row).eq('id',id).select().single();
   else r=await db.from('products').insert(row).select().single();
   if(r.error)throw r.error;
+  if(Number(r.data?.stock)!==desired.stock)throw new Error('Product details saved, but stock did not verify. Please check the Supabase products table permissions.');
   const productId=r.data?.id||id;
   if(!productId)throw new Error('Product saved, but its ID could not be read back.');
   const old=await getProductMeta(productId);
@@ -269,7 +270,8 @@ window.saveProduct=async function(id){
   for(let i=0;i<files.length;i++){newlyUploaded.push(await uploadProductImage(files[i]));}
   // Put newly uploaded photos first so the homepage card uses the newest product image.
   images=[...newlyUploaded,...images.filter(url=>!newlyUploaded.includes(url))];
-  await saveProductMeta(productId,{images:images,status:selectedStatus,featured:document.getElementById('ffeatured').checked});
+  const publishedStatus=desired.stock>0?'available':'soldout';
+  await saveProductMeta(productId,{images:images,status:publishedStatus,featured:document.getElementById('ffeatured').checked});
   toast('Product saved and published');
   products();
  }catch(e){toast(e.message||'Could not save product')}
