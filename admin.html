@@ -306,11 +306,13 @@ window.saveProduct=async function(id){
    toast('Uploading photo '+(i+1)+' of '+files.length+'…');
    newlyUploaded.push(await uploadProductImage(files[i]));
   }
-  // Keep every selected photo, in selection order, at the front of the product gallery.
-  images=[...newlyUploaded,...images.filter(url=>!newlyUploaded.includes(url))];
+  // Preserve the existing gallery order and append new photos at the end, in the exact order selected.
+  images=[...images,...newlyUploaded];
   const publishedStatus=desired.stock>0?'available':'soldout';
   await saveProductMeta(productId,{images:images,status:publishedStatus,featured:document.getElementById('ffeatured').checked});
-  toast('Product saved and published with '+images.length+' photo(s)');
+  const verify=await getProductMeta(productId);
+  if(!Array.isArray(verify.images)||verify.images.length!==images.length)throw new Error('Photos uploaded but the gallery did not save correctly. Please retry; existing photos have been kept.');
+  toast('Published successfully — '+newlyUploaded.length+' new photo(s) added after the existing photos.');
   products();
  }catch(e){
   const message=e&&e.message?e.message:'Could not save product';
