@@ -282,7 +282,14 @@ window.saveProduct=async function(id){
   if(!columns.includes('stock'))throw new Error('Your Supabase products table is missing the stock column, so inventory cannot be updated.');
   // SKU is unique in Supabase. If this SKU is already assigned to another product,
   // generate the next free SKU instead of letting the database reject the save.
-  if(columns.includes('sku')&&desired.sku){
+  // For a new product, create a genuinely fresh SKU instead of trusting a possibly
+  // stale/hidden SKU lookup. Existing product edits keep their current SKU unless changed.
+  if(!id&&columns.includes('sku')){
+   const enteredSku=desired.sku||'VST';
+   desired.sku=enteredSku+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+   document.getElementById('fsku').value=desired.sku;
+  }
+  if(id&&columns.includes('sku')&&desired.sku){
    const baseSku=desired.sku;
    let candidate=baseSku,suffix=2;
    while(true){
@@ -300,6 +307,7 @@ window.saveProduct=async function(id){
    }
   }
   let row=pickProductRow(columns,desired),r;
+  if(columns.includes('sku'))row.sku=desired.sku;
   const retryBaseSku=desired.sku;
   // The database unique index is the final authority. Retry on an actual
   // duplicate-key response too (for example when row-level security hides the existing SKU).
@@ -312,13 +320,14 @@ window.saveProduct=async function(id){
    if(!duplicate||!columns.includes('sku')||!desired.sku)throw r.error;
    // Use a high-entropy suffix: sequential suffixes may themselves already exist
    // when the table contains older products or row-level security hides them.
-   const uniqueSuffix=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)+'-'+(attempt+1);
-   desired.sku=retryBaseSku+'-'+uniqueSuffix;
+   const uniqueSuffix=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,12)+'-'+(attempt+1);
+   desired.sku=(retryBaseSku||'VST')+'-'+uniqueSuffix;
    row=pickProductRow(columns,desired);
+   if(columns.includes('sku'))row.sku=desired.sku;
    const skuInput=document.getElementById('fsku');
    if(skuInput)skuInput.value=desired.sku;
   }
-  if(r.error)throw new Error('Supabase still rejected the product after 25 unique SKU attempts: '+(r.error.message||'unknown database error'));
+  if(r.error)throw new Error('Product could not be saved: '+(r.error.message||'unknown database error')+' (SKU tried: '+(desired.sku||'blank')+')');
   if(Number(r.data?.stock)!==desired.stock)throw new Error('Product details saved, but stock did not verify. Please check the Supabase products table permissions.');
   const productId=r.data?.id||id;
   if(!productId)throw new Error('Product saved, but its ID could not be read back.');
