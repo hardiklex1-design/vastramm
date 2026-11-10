@@ -208,6 +208,8 @@ function productForm(x={}){
  '<button class="btn" onclick="saveProduct(\''+(x.id||'')+'\')">'+(x.id?'Save & Publish changes':'Save & Publish product')+'</button> <button class="btn secondary" onclick="products()">Cancel</button>'+
  (x.id?' <button class="btn secondary" onclick="deleteProduct(\''+x.id+'\')">Delete</button>':'')+
  '</div>';
+ renderProductPhotoList();
+ document.getElementById('furls').addEventListener('input',renderProductPhotoList);
 }
 window.renderProductPhotoList=function(){
  const box=document.getElementById('imagePreview'),urlBox=document.getElementById('furls'),fileBox=document.getElementById('fimages');
