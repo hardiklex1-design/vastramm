@@ -299,11 +299,24 @@ window.saveProduct=async function(id){
     toast('SKU already existed. Assigned '+candidate+' to this product.');
    }
   }
-  const row=pickProductRow(columns,desired);
-  let r;
-  if(id) r=await db.from('products').update(row).eq('id',id).select().single();
-  else r=await db.from('products').insert(row).select().single();
-  if(r.error)throw r.error;
+  let row=pickProductRow(columns,desired),r;
+  // The database unique index is the final authority. Retry on an actual
+  // duplicate-key response too (for example when row-level security hides the existing SKU).
+  for(let attempt=0;attempt<25;attempt++){
+   r=id
+    ?await db.from('products').update(row).eq('id',id).select().single()
+    :await db.from('products').insert(row).select().single();
+   if(!r.error)break;
+   const duplicate=r.error.code==='23505'||String(r.error.message||'').includes('products_sku_key')||String(r.error.message||'').toLowerCase().includes('duplicate key');
+   if(!duplicate||!columns.includes('sku')||!desired.sku)throw r.error;
+   const base=desired.sku.replace(/-\\d+$/,'');
+   const next=attempt+2;
+   desired.sku=base+'-'+next;
+   row=pickProductRow(columns,desired);
+   const skuInput=document.getElementById('fsku');
+   if(skuInput)skuInput.value=desired.sku;
+  }
+  if(r.error)throw new Error('Could not find an available SKU automatically. Please try a different product SKU.');
   if(Number(r.data?.stock)!==desired.stock)throw new Error('Product details saved, but stock did not verify. Please check the Supabase products table permissions.');
   const productId=r.data?.id||id;
   if(!productId)throw new Error('Product saved, but its ID could not be read back.');
@@ -328,7 +341,7 @@ window.saveProduct=async function(id){
   products();
  }catch(e){
   const message=e&&e.message?e.message:'Could not save product';
-  if(message.includes('products_sku_key')||message.toLowerCase().includes('duplicate key'))toast('This SKU is already in use. Please use a unique SKU; no existing product was overwritten.');
+  if(message.includes('products_sku_key')||message.toLowerCase().includes('duplicate key'))toast('SKU conflict could not be resolved automatically. Enter a different SKU and try again.');
   else toast(message);
  }
 };
