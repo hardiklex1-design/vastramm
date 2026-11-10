@@ -172,7 +172,7 @@ async function renderProducts(){
   if(r.error)throw r.error;
   const data=r.data||[];
   content.innerHTML='<div class="panel"><div class="top"><h3>Products</h3><button type="button" class="btn" id="addProductBtn">+ Add product</button></div>'+
-   (data.length?data.map(function(x){return '<div class="row"><div><b>'+esc(x.name||'Untitled')+'</b><div class="muted">'₹'+Number(x.price||0).toLocaleString('en-IN')+' · '+Number(x.stock||0)+' stock</div></div><button type="button" class="btn secondary edit-product-btn" data-id="'+esc(x.id)+'">Edit</button></div>'}).join(''):'<p class="muted">No products yet.</p>')+
+   (data.length?data.map(function(x){return '<div class="row"><div><b>'+esc(x.name||'Untitled')+'</b><div class="muted">₹'+Number(x.price||0).toLocaleString('en-IN')+' · '+Number(x.stock||0)+' stock</div></div><button type="button" class="btn secondary edit-product-btn" data-id="'+esc(x.id)+'">Edit</button></div>'}).join(''):'<p class="muted">No products yet.</p>')+
    '</div>';
   document.getElementById('addProductBtn').onclick=function(){productForm()};
   document.querySelectorAll('.edit-product-btn').forEach(function(btn){btn.onclick=function(){editProduct(btn.dataset.id)}});
