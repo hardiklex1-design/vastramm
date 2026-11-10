@@ -300,6 +300,7 @@ window.saveProduct=async function(id){
    }
   }
   let row=pickProductRow(columns,desired),r;
+  const retryBaseSku=desired.sku;
   // The database unique index is the final authority. Retry on an actual
   // duplicate-key response too (for example when row-level security hides the existing SKU).
   for(let attempt=0;attempt<25;attempt++){
@@ -309,9 +310,8 @@ window.saveProduct=async function(id){
    if(!r.error)break;
    const duplicate=r.error.code==='23505'||String(r.error.message||'').includes('products_sku_key')||String(r.error.message||'').toLowerCase().includes('duplicate key');
    if(!duplicate||!columns.includes('sku')||!desired.sku)throw r.error;
-   const base=desired.sku.replace(/-\\d+$/,'');
    const next=attempt+2;
-   desired.sku=base+'-'+next;
+   desired.sku=retryBaseSku+'-'+next;
    row=pickProductRow(columns,desired);
    const skuInput=document.getElementById('fsku');
    if(skuInput)skuInput.value=desired.sku;
