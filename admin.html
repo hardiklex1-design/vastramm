@@ -190,6 +190,8 @@ window.editProduct=async id=>{
  productForm(Object.assign({},r.data,{_meta:meta}));
 };
 function productForm(x={}){
+ // Reset the pending upload queue whenever a new product form is opened.
+ window.vastrammPendingProductFiles=[];
  const meta=x._meta||{};
  const imgs=Array.isArray(meta.images)?meta.images:[];
  content.innerHTML='<div class="panel"><h3>'+(x.id?'Edit':'Add')+' product</h3>'+
@@ -225,14 +227,20 @@ window.renderProductPhotoList=function(){
   const list=urlBox.value.split('\n').map(v=>v.trim()).filter(Boolean);list.splice(Number(btn.dataset.index),1);urlBox.value=list.join('\n');renderProductPhotoList();
  }});
  box.querySelectorAll('.remove-new-photo').forEach(function(btn){btn.onclick=function(){
-  const dt=new DataTransfer(),current=Array.from(fileBox.files||[]);current.forEach(function(file,i){if(i!==Number(btn.dataset.index))dt.items.add(file)});fileBox.files=dt.files;renderProductPhotoList();
+  const dt=new DataTransfer(),current=Array.from(fileBox.files||[]);current.forEach(function(file,i){if(i!==Number(btn.dataset.index))dt.items.add(file)});fileBox.files=dt.files;window.vastrammPendingProductFiles=Array.from(dt.files);renderProductPhotoList();
  }});
 };
 window.previewProductImages=function(){
  const fileBox=document.getElementById('fimages'),urlBox=document.getElementById('furls');
  if(!fileBox||!urlBox)return;
- const urls=urlBox.value.split('\n').map(v=>v.trim()).filter(Boolean),files=Array.from(fileBox.files||[]);
- if(urls.length+files.length>12){fileBox.value='';toast('A product can have up to 12 photos in total. Remove a photo before adding more.');}
+ // Accumulate each file selection, so choosing photos one-by-one never replaces earlier selections.
+ const selected=Array.from(fileBox.files||[]),pending=window.vastrammPendingProductFiles||[];
+ const merged=pending.slice();
+ selected.forEach(function(file){if(!merged.includes(file))merged.push(file)});
+ const urls=urlBox.value.split('\n').map(v=>v.trim()).filter(Boolean);
+ if(urls.length+merged.length>12){fileBox.value='';toast('A product can have up to 12 photos in total. Remove a photo before adding more.');return}
+ const dt=new DataTransfer();merged.forEach(function(file){dt.items.add(file)});fileBox.files=dt.files;
+ window.vastrammPendingProductFiles=Array.from(dt.files);
  renderProductPhotoList();
 };
 async function compressImage(file){
