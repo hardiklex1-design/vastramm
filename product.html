@@ -52,6 +52,17 @@ body.v-motion-leaving{opacity:0;transform:translateY(5px);transition:opacity .22
 #vastramm-cart-drawer .v-cart-continue{display:block;text-align:center;color:#aaa;text-decoration:none;font-size:10px;letter-spacing:2px;padding:17px 0}
 @keyframes vCartItemIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){#vastramm-cart-overlay,#vastramm-cart-drawer{transition:none}#vastramm-cart-drawer .v-cart-product{animation:none}}
+</style><style>
+/* Mobile product navigation spacing fix */
+.nav{display:flex;align-items:center;justify-content:space-between;gap:22px;letter-spacing:2px}
+.nav a{display:inline-block;white-space:nowrap;line-height:1.5}
+.nav a:first-child{flex:0 0 auto}
+.nav a:last-child{flex:0 0 auto;margin-left:auto;text-align:right}
+@media(max-width:800px){
+ .nav{gap:16px;padding:20px 0;letter-spacing:1.25px}
+ .nav a:first-child{font-size:13px}
+ .nav a:last-child{font-size:10px}
+}
 </style></head><body><div class="watermark">VASTRAMM</div><div class="wrap"><nav class="nav"><a href="index.html">VASTRAMM</a><a href="index.html#collection">BACK TO COLLECTION ↗</a></nav><main id="app"><div class="layout"><div class="placeholder">LOADING</div><div><div class="ey">VASTRAMM BY MY3</div><h1>LOADING</h1></div></div></main></div><script>
 var db=window.supabase.createClient("https://xzipzscjjvkjuzkmtxsj.supabase.co","sb_publishable_GlX_WAPD7MApMRMGGVvMxA_2NtPC_y9");
 var CATALOG={
