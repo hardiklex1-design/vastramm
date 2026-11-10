@@ -202,7 +202,7 @@ function productForm(x={}){
  '<label>Stock</label><input id="fstock" type="number" value="'+(x.stock||0)+'">'+
  '<label>Status</label><select id="fstatus"><option value="available" '+((meta.status||'available')==='available'?'selected':'')+'>Available</option><option value="soldout" '+(meta.status==='soldout'?'selected':'')+'>Sold out</option></select>'+
  '<label>Description</label><textarea id="fdesc" rows="5">'+esc(x.description||'')+'</textarea>'+
- '<label>Product photos — upload up to 12 images (7 or more recommended)</label><input id="fimages" type="file" multiple accept="image/*" onchange="previewProductImages()">'+
+ '<label>Product photos — select multiple images together (Ctrl/Shift-click) or add more in another selection</label><input id="fimages" type="file" multiple="multiple" accept="image/*" onchange="previewProductImages()">'+
  '<div class="muted" style="font-size:12px;margin:-7px 0 12px">Add at least 7 product angles/details when available. Select multiple photos together; all saved photos appear in the customer gallery.</div>'+
  '<div id="imagePreview" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr));margin:10px 0">'+imgs.map(function(u,i){return '<div class="stat photo-card"><img class="thumb" style="width:100%;height:110px;object-fit:cover" src="'+esc(u)+'"><div style="font-size:11px;margin:6px 0">Photo '+(i+1)+'</div><button type="button" class="btn secondary remove-saved-photo" data-index="'+i+'" style="padding:7px 10px;margin:0;width:100%">Remove photo</button></div>'}).join('')+'</div>'+
  '<label>Image URLs (optional, one per line)</label><textarea id="furls" rows="4">'+imgs.map(esc).join('\n')+'</textarea>'+
@@ -214,9 +214,9 @@ function productForm(x={}){
  document.getElementById('furls').addEventListener('input',renderProductPhotoList);
 }
 window.renderProductPhotoList=function(){
- const box=document.getElementById('imagePreview'),urlBox=document.getElementById('furls'),fileBox=document.getElementById('fimages');
- if(!box||!urlBox||!fileBox)return;
- const urls=urlBox.value.split('\n').map(v=>v.trim()).filter(Boolean),files=Array.from(fileBox.files||[]);
+ const box=document.getElementById('imagePreview'),urlBox=document.getElementById('furls');
+ if(!box||!urlBox)return;
+ const urls=urlBox.value.split('\n').map(v=>v.trim()).filter(Boolean),files=window.vastrammPendingProductFiles||[];
  box.innerHTML=urls.map(function(u,i){
   return '<div class="stat photo-card"><img class="thumb" style="width:100%;height:110px;object-fit:cover" src="'+esc(u)+'"><div style="font-size:11px;margin:6px 0">Saved photo '+(i+1)+'</div><button type="button" class="btn secondary remove-saved-photo" data-index="'+i+'" style="padding:7px 10px;margin:0;width:100%">Remove photo</button></div>';
  }).join('')+files.map(function(file,i){
@@ -227,20 +227,24 @@ window.renderProductPhotoList=function(){
   const list=urlBox.value.split('\n').map(v=>v.trim()).filter(Boolean);list.splice(Number(btn.dataset.index),1);urlBox.value=list.join('\n');renderProductPhotoList();
  }});
  box.querySelectorAll('.remove-new-photo').forEach(function(btn){btn.onclick=function(){
-  const dt=new DataTransfer(),current=Array.from(fileBox.files||[]);current.forEach(function(file,i){if(i!==Number(btn.dataset.index))dt.items.add(file)});fileBox.files=dt.files;window.vastrammPendingProductFiles=Array.from(dt.files);renderProductPhotoList();
+  const files=window.vastrammPendingProductFiles||[];files.splice(Number(btn.dataset.index),1);window.vastrammPendingProductFiles=files;renderProductPhotoList();
  }});
 };
 window.previewProductImages=function(){
  const fileBox=document.getElementById('fimages'),urlBox=document.getElementById('furls');
  if(!fileBox||!urlBox)return;
- // Accumulate each file selection, so choosing photos one-by-one never replaces earlier selections.
- const selected=Array.from(fileBox.files||[]),pending=window.vastrammPendingProductFiles||[];
+ const pending=window.vastrammPendingProductFiles||[];
+ const selected=Array.from(fileBox.files||[]);
  const merged=pending.slice();
- selected.forEach(function(file){if(!merged.includes(file))merged.push(file)});
+ selected.forEach(function(file){
+  const key=[file.name,file.size,file.lastModified].join('|');
+  if(!merged.some(function(old){return [old.name,old.size,old.lastModified].join('|')===key}))merged.push(file);
+ });
  const urls=urlBox.value.split('\n').map(v=>v.trim()).filter(Boolean);
- if(urls.length+merged.length>12){fileBox.value='';toast('A product can have up to 12 photos in total. Remove a photo before adding more.');return}
- const dt=new DataTransfer();merged.forEach(function(file){dt.items.add(file)});fileBox.files=dt.files;
- window.vastrammPendingProductFiles=Array.from(dt.files);
+ if(urls.length+merged.length>12){toast('Maximum 12 photos per product. Remove a photo before adding more.');fileBox.value='';return}
+ window.vastrammPendingProductFiles=merged;
+ // Clear the native picker after copying files into our queue. This allows another multi-file selection.
+ fileBox.value='';
  renderProductPhotoList();
 };
 async function compressImage(file){
@@ -307,7 +311,7 @@ window.saveProduct=async function(id){
   let images=Array.isArray(old.images)?old.images:[];
   const manual=document.getElementById('furls').value.split('\n').map(function(v){return v.trim()}).filter(Boolean);
   if(manual.length)images=manual;
-  const files=Array.from(document.getElementById('fimages').files||[]);
+  const files=(window.vastrammPendingProductFiles||[]).slice();
   if(files.length+images.length>12)throw new Error('A product can have up to 12 photos in total. Remove some photos first.');
   const newlyUploaded=[];
   for(let i=0;i<files.length;i++){
