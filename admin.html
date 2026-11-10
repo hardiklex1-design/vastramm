@@ -310,13 +310,15 @@ window.saveProduct=async function(id){
    if(!r.error)break;
    const duplicate=r.error.code==='23505'||String(r.error.message||'').includes('products_sku_key')||String(r.error.message||'').toLowerCase().includes('duplicate key');
    if(!duplicate||!columns.includes('sku')||!desired.sku)throw r.error;
-   const next=attempt+2;
-   desired.sku=retryBaseSku+'-'+next;
+   // Use a high-entropy suffix: sequential suffixes may themselves already exist
+   // when the table contains older products or row-level security hides them.
+   const uniqueSuffix=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)+'-'+(attempt+1);
+   desired.sku=retryBaseSku+'-'+uniqueSuffix;
    row=pickProductRow(columns,desired);
    const skuInput=document.getElementById('fsku');
    if(skuInput)skuInput.value=desired.sku;
   }
-  if(r.error)throw new Error('Could not find an available SKU automatically. Please try a different product SKU.');
+  if(r.error)throw new Error('Supabase still rejected the product after 25 unique SKU attempts: '+(r.error.message||'unknown database error'));
   if(Number(r.data?.stock)!==desired.stock)throw new Error('Product details saved, but stock did not verify. Please check the Supabase products table permissions.');
   const productId=r.data?.id||id;
   if(!productId)throw new Error('Product saved, but its ID could not be read back.');
