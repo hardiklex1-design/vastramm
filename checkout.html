@@ -25,12 +25,11 @@ async function render(){
   if(x.id){
    try{
     const pr=await db.from("products").select("stock").eq("id",x.id).maybeSingle();
-    if(!pr.error&&pr.data&&Number(pr.data.stock||0)<=0)sold.push(x.name);
+    if(pr.error)throw pr.error;
+    if(!pr.data||Number(pr.data.stock||0)<=0)sold.push(x.name);
+    else if(Number(x.qty||1)>Number(pr.data.stock))sold.push(x.name+" (only "+Number(pr.data.stock)+" in stock)");
    }catch(e){}
-   try{
-    const mr=await db.from("site_settings").select("setting_value").eq("setting_key","product_meta_"+x.id).maybeSingle();
-    if(!mr.error&&mr.data?.setting_value?.status==="soldout")sold.push(x.name);
-   }catch(e){}
+
   }
  }
  if(sold.length){
