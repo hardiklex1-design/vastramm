@@ -285,8 +285,9 @@ window.saveProduct=async function(id){
   // For a new product, create a genuinely fresh SKU instead of trusting a possibly
   // stale/hidden SKU lookup. Existing product edits keep their current SKU unless changed.
   if(!id&&columns.includes('sku')){
-   const enteredSku=desired.sku||'VST';
-   desired.sku=enteredSku+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+   const enteredSku=(desired.sku||'VST').split('-')[0];
+   const token=(window.crypto&&crypto.randomUUID)?crypto.randomUUID().replace(/-/g,'').slice(0,20):(Date.now().toString(36)+Math.random().toString(36).slice(2,16));
+   desired.sku=enteredSku+'-'+token.toUpperCase();
    document.getElementById('fsku').value=desired.sku;
   }
   if(id&&columns.includes('sku')&&desired.sku){
@@ -320,8 +321,8 @@ window.saveProduct=async function(id){
    if(!duplicate||!columns.includes('sku')||!desired.sku)throw r.error;
    // Use a high-entropy suffix: sequential suffixes may themselves already exist
    // when the table contains older products or row-level security hides them.
-   const uniqueSuffix=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,12)+'-'+(attempt+1);
-   desired.sku=(retryBaseSku||'VST')+'-'+uniqueSuffix;
+   const token=(window.crypto&&crypto.randomUUID)?crypto.randomUUID().replace(/-/g,'').slice(0,24):(Date.now().toString(36)+Math.random().toString(36).slice(2,18));
+   desired.sku=(retryBaseSku||'VST')+'-'+token.toUpperCase();
    row=pickProductRow(columns,desired);
    if(columns.includes('sku'))row.sku=desired.sku;
    const skuInput=document.getElementById('fsku');
@@ -352,8 +353,7 @@ window.saveProduct=async function(id){
   products();
  }catch(e){
   const message=e&&e.message?e.message:'Could not save product';
-  if(message.includes('products_sku_key')||message.toLowerCase().includes('duplicate key'))toast('SKU conflict could not be resolved automatically. Enter a different SKU and try again.');
-  else toast(message);
+  toast(message);
  }
 };
 async function numbers(){
